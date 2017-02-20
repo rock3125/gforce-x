@@ -4,3 +4,7 @@ An old C++ game for Windows.  I wrote this using DirectX 9 (d3d) and Visual Stud
 
 ![menu screen](https://raw.githubusercontent.com/peter3125/gforce-x/master/data/gravityss1.jpg)
 
+In game screenshot
+
+![game](https://raw.githubusercontent.com/peter3125/gforce-x/master/data/gravityss2.jpg)
+
