@@ -1,0 +1,11 @@
+<settings>
+  <properties left='814' top='5' right='1278' bottom='480' minimized='false' visible='true'></properties>
+  <components left='833' top='497' right='1240' bottom='846' minimized='false' visible='true'></components>
+<camera initialYAngle="0.000000" initialZoom="1.000000" initialXAngle="0.000000" radius="-3.607445" type="1" version="1" viewingAngle="60.000000" viewingDistance="8000.000000" zoom="1.000000">
+  <worldObject code="" scriptable="False" worldType="3" scriptenabled="False" version="1" visible="True">
+    <prs localRotation="0.000000,0.000000,0.000000,1.000000" parentOid="0" localPosition="455.000000,394.000000,-250.000000" localScale="1.000000,1.000000,1.000000" version="1">
+      <obj name="" oid="4" typeSet="01110000000000000000000000000000" version="1" />
+    </prs>
+  </worldObject>
+</camera>
+</settings>

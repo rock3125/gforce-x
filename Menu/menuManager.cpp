@@ -1,0 +1,865 @@
+//////////////////////////////////////////////////////////////////////
+/// GRAVITY FORCE X
+///
+/// (c)Copyright Peter de Vocht, 2006
+///
+/// I'm releasing this code under GPL v2.1 (see included file lgpl.txt)
+///
+//////////////////////////////////////////////////////////////////////
+
+#include "standardFirst.h"
+
+#include "d3d9/texture.h"
+
+#include "system/gamePad.h"
+#include "system/keyboard.h"
+#include "system/xml/XmlParser.h"
+#include "system/model/level.h"
+#include "system/sound/soundSystem.h"
+#include "system/BaseApp.h"
+#include "runtime/runtime.h"
+
+#include "menu/menuManager.h"
+#include "menu/menu.h"
+#include "menu/menuItem.h"
+#include "menu/menuLevelManager.h"
+#include "menu/menuShipManager.h"
+#include "menu/menuLevel.h"
+
+#include "game/ship.h"
+#include "game/shipData.h"
+#include "game/base.h"
+#include "game/modelMap.h"
+
+#include "system/network/networkClient.h"
+
+/////////////////////////////////////////////////////////////
+
+MenuManager::MenuManager()
+	: menuLevelManager(NULL)
+	, menuShipManager(NULL)
+{
+	activeMenu = 0;
+	activeItem = 0;
+	blinking = false;
+	blinkTime = 0;
+	lastAction = LA_NONE;
+	BLINK_INTERVAL = 0.25;
+
+	brightNessTime = 0;
+	BRIGHTNESS_MAX = 1.0;
+	BRIGHTNESS_MIN = 0.6;
+	brightNess = BRIGHTNESS_MIN;
+	brightNessDirn = 0.001;
+	BRIGHTNESS_INTERVAL = 0.1;
+
+	menuLevelManager = new MenuLevelManager();
+	menuShipManager = new MenuShipManager();
+
+	for (int i=0; i < NUM_CONTROLS; i++)
+	{
+		control[i] = NULL;
+	}
+
+	// setup controls
+	control[CT_UP1] = new Input::Event(Input::KEYBOARD, Input::KEY, 0, Input::SK_UP);
+	control[CT_DOWN1] = new Input::Event(Input::KEYBOARD, Input::KEY, 0, Input::SK_DOWN);
+	control[CT_SELECT1] = new Input::Event(Input::KEYBOARD, Input::KEY, 0, Input::SK_ENTER);
+	control[CT_UP2] = new Input::Event(Input::GAMEPAD, Input::GAMEPAD_AXIS, 0, 2);
+	control[CT_DOWN2] = new Input::Event(Input::GAMEPAD, Input::GAMEPAD_AXIS, 0, 3);
+	control[CT_SELECT2] = new Input::Event(Input::GAMEPAD, Input::GAMEPAD_BUTTON, 0, 0);
+	control[CT_ESC] = new Input::Event(Input::KEYBOARD, Input::KEY, 0, Input::SK_ESCAPE);
+
+	inputs[0] =Input::CTRL_KEYBOARD0;
+	inputs[1] =Input::CTRL_KEYBOARD1;
+	inputs[2] =Input::CTRL_GAMEPAD1;
+	inputs[3] =Input::CTRL_GAMEPAD2;
+
+	inputNames[0] = NULL;
+	inputNames[1] = NULL;
+	inputNames[2] = NULL;
+	inputNames[3] = NULL;
+	inputNames[4] = NULL;
+	inputNames[5] = NULL;
+
+	white = D3DXCOLOR(1,1,1,1);
+	selColour = D3DXCOLOR(1,1,1,1);
+	selColourOff = D3DXCOLOR(0.4f,0.4f,0.4f,1);
+}
+
+MenuManager::~MenuManager()
+{
+	safe_delete(menuShipManager);
+	safe_delete(menuLevelManager);
+
+	safe_delete_stl_array(menu);
+
+	for (int i=0; i < NUM_CONTROLS; i++)
+	{
+		safe_delete(control[i]);
+	}
+
+	inputNames[0] = NULL;
+	inputNames[1] = NULL;
+	inputNames[2] = NULL;
+	inputNames[3] = NULL;
+	inputNames[4] = NULL;
+	inputNames[5] = NULL;
+}
+
+MenuManager::MenuManager(const MenuManager& mm)
+	: menuLevelManager(NULL)
+	, menuShipManager(NULL)
+{
+	operator=(mm);
+}
+
+const MenuManager& MenuManager::operator=(const MenuManager& mm)
+{
+	menu = mm.menu;
+	activeMenu = mm.activeMenu;
+	activeItem = mm.activeItem;
+	return *this;
+}
+
+void MenuManager::SetShipDefinitions(std::vector<ShipData*> shipDefinitions)
+{
+	ships = shipDefinitions;
+	menuShipManager->SetShipDefinitions(shipDefinitions);
+}
+
+void MenuManager::SetActiveMenu(int _activeMenu, int _activeItem)
+{
+	activeMenu = _activeMenu;
+	activeItem = _activeItem;
+}
+
+void MenuManager::Load(const std::string& filename)
+{
+	safe_delete_stl_array(menu);
+
+	// setup ships controls
+	switch (GamePad::Get()->GetNumGamePads())
+	{
+	case 0:
+		{
+			inputs[0] = Input::CTRL_KEYBOARD0;
+			inputs[1] = Input::CTRL_KEYBOARD1;
+			inputs[2] = Input::CTRL_GAMEPAD1;
+			inputs[3] = Input::CTRL_GAMEPAD2;
+			break;
+		}
+	case 1:
+		{
+			inputs[0] = Input::CTRL_KEYBOARD0;
+			inputs[1] = Input::CTRL_GAMEPAD1;
+			inputs[2] = Input::CTRL_GAMEPAD2;
+			inputs[3] = Input::CTRL_GAMEPAD3;
+			break;
+		}
+	default:
+		{
+			inputs[0] = Input::CTRL_GAMEPAD1;
+			inputs[1] = Input::CTRL_GAMEPAD2;
+			inputs[2] = Input::CTRL_GAMEPAD3;
+			inputs[3] = Input::CTRL_GAMEPAD4;
+			break;
+		}
+	}
+
+	XmlParser parser;
+	if (!parser.LoadAndParse(filename))
+	{
+		throw new Exception(parser.GetError());
+	}
+	XmlNode* root = parser.GetDocumentRoot();
+	if (root != NULL)
+	{
+		// parser xml menu document
+		std::vector<XmlNode*> children = root->GetChildren();
+		for (int i=0; i < children.size(); i++)
+		{
+			if (children[i]->GetTag() == "menu")
+			{
+				int id = System::Str2Int(children[i]->GetValue("id"));
+				std::string name = children[i]->GetValue("name");
+				std::string background = children[i]->GetValue("background");
+
+				Menu* menu1 = new Menu();
+				menu1->SetId(id);
+				menu1->SetName(name);
+				menu1->SetBackground(background);
+
+				std::vector<XmlNode*> children2 = children[i]->GetChildren();
+				for (int j=0; j < children2.size();  j++)
+				{
+					if (children2[j]->GetTag() == "item")
+					{
+						std::string name = children2[j]->GetValue("name");
+						std::string action = children2[j]->GetValue("action");
+						std::string usertext = children2[j]->GetValue("usertext");
+						bool showLevels = false;
+						bool showShips = false;
+						int numPlayers = 0;
+						int player = 0;
+						bool showInputs = false;
+						bool controlMusic = false;
+						bool controlFullscreen = false;
+						bool controlResolution = false;
+						int inputId = 0;
+						if (children2[j]->GetValue("showlevels") == "true")
+						{
+							showLevels = true;
+							numPlayers = System::Str2Int(children2[j]->GetValue("numplayers"));
+						}
+						if (children2[j]->GetValue("showships") == "true")
+						{
+							showShips = true;
+							player = System::Str2Int(children2[j]->GetValue("player"));
+						}
+						if (!children2[j]->GetValue("selectinput").empty())
+						{
+							showInputs = true;
+							inputId = System::Str2Int(children2[j]->GetValue("selectinput"));
+						}
+						if (children2[j]->GetValue("controlmusic") == "true")
+						{
+							controlMusic = true;
+						}
+						if (children2[j]->GetValue("controlfullscreen") == "true")
+						{
+							controlFullscreen = true;
+						}
+						if (children2[j]->GetValue("controlresolution") == "true")
+						{
+							controlResolution = true;
+						}
+
+						MenuItem* menuItem = new MenuItem();
+						menuItem->SetName(name);
+						menuItem->SetAction(action);
+						menuItem->SetShowLevels(showLevels);
+						menuItem->SetNumPlayers(numPlayers);
+						menuItem->SetShowShips(showShips);
+						menuItem->SetPlayer(player);
+						menuItem->SetShowInputs(showInputs);
+						menuItem->SetInputId(inputId);
+						menuItem->UserText(usertext);
+						menuItem->ControlMusic(controlMusic);
+						menuItem->ControlFullscreen(controlFullscreen);
+						menuItem->ControlResolution(controlResolution);
+
+						menu1->AddMenuItem(menuItem);
+					}
+				}
+
+				// add menu
+				menu[menu1->GetId()] = menu1;
+			}
+		}
+	}
+
+	// load all available levels
+	menuLevelManager->Load(System::GetDataDirectory() + "levels\\levels.xml");
+
+	// get input names
+	inputNames[Input::CTRL_KEYBOARD0] = TextureCache::GetTexture("menu\\Keyboard0.tga");
+	inputNames[Input::CTRL_KEYBOARD1] = TextureCache::GetTexture("menu\\Keyboard1.tga");
+	inputNames[Input::CTRL_GAMEPAD1] = TextureCache::GetTexture("menu\\Gamepad1.tga");
+	inputNames[Input::CTRL_GAMEPAD2] = TextureCache::GetTexture("menu\\Gamepad2.tga");
+	inputNames[Input::CTRL_GAMEPAD3] = TextureCache::GetTexture("menu\\Gamepad3.tga");
+	inputNames[Input::CTRL_GAMEPAD4] = TextureCache::GetTexture("menu\\Gamepad4.tga");
+}
+
+void MenuManager::SetupSceneForRendering()
+{
+	Device* dev=Interface::GetDevice();
+	if (!dev->BeginScene()) return;
+
+	// D3DCLEAR_STENCIL
+	dev->Clear(0,NULL,D3DCLEAR_TARGET|D3DCLEAR_ZBUFFER,D3DXCOLOR(0,0,0,0),1,0);
+
+	dev->SetViewport(0,0,dev->GetWidth(),dev->GetHeight());
+
+	// set fixed funciton transforms
+	dev->SetIdentityTransform();
+
+	// enable color writes
+	dev->SetRenderState(D3DRS_COLORWRITEENABLE,D3DCOLORWRITEENABLE_RED   |
+											   D3DCOLORWRITEENABLE_BLUE  |
+											   D3DCOLORWRITEENABLE_GREEN |
+											   D3DCOLORWRITEENABLE_ALPHA);
+	// set fillemode
+	dev->SetRenderState(D3DRS_FILLMODE,D3DFILL_SOLID);
+
+	// Turn on the zbuffer
+	dev->SetRenderState(D3DRS_ZENABLE,TRUE);
+	dev->SetRenderState(D3DRS_CULLMODE,D3DCULL_NONE);
+
+	dev->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR );
+    dev->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR );
+    dev->SetSamplerState( 0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR );
+    dev->SetSamplerState( 0, D3DSAMP_ADDRESSU,  D3DTADDRESS_CLAMP );
+    dev->SetSamplerState( 0, D3DSAMP_ADDRESSV,  D3DTADDRESS_CLAMP );
+
+	dev->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
+	dev->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
+
+	dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+
+	dev->SetRenderState(D3DRS_BLENDOP, D3DBLENDOP_ADD);
+
+	dev->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+	dev->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+
+	dev->SetRenderState(D3DRS_LIGHTING, FALSE);
+
+	dev->SetTextureStageState(0,D3DTSS_COLOROP, D3DTOP_MODULATE);
+	dev->SetTextureStageState(0,D3DTSS_COLORARG1, D3DTA_TEXTURE);
+	dev->SetTextureStageState(0,D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+
+	dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_MODULATE);
+	dev->SetTextureStageState(0,D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
+	dev->SetTextureStageState(0,D3DTSS_ALPHAARG2, D3DTA_TFACTOR);
+}
+
+void MenuManager::WriteText(float x, float y, D3DXCOLOR c, Texture* t)
+{
+	if (t != NULL)
+	{
+		Device* dev=Interface::GetDevice();
+		dev->FillRect(D3DXVECTOR2(x,y), D3DXVECTOR2(x+t->GetWidth(),y+t->GetHeight()), c, t);
+	}
+}
+
+void MenuManager::UpdateProgress(float progress)
+{
+	// display progress (force render)
+	Device* dev = Interface::GetDevice();
+	if (dev != NULL)
+	{
+		SetupSceneForRendering();
+
+		D3DXCOLOR barColour = D3DXCOLOR(0.2f,0.2f,1,1);
+
+		float w = (float)dev->GetWidth();
+		float h = (float)dev->GetHeight();
+		float barw = w * 0.8f * progress;
+		float barl = w * 0.1f;
+		float barh = 5;
+		float bart = h * 0.5f - barh * 0.5f;
+
+		Font* font = dev->GetSmallFont();
+		if (font != NULL)
+		{
+			font->Write(barl - 10, bart - 30, "LOADING...", D3DXCOLOR(1,1,1,1));
+		}
+		dev->FillRect(D3DXVECTOR2(barl,bart), D3DXVECTOR2(barl+barw,bart+barh), barColour);
+
+		dev->EndScene();
+		dev->Present();
+	}
+}
+
+void MenuManager::Draw(double time)
+{
+	Device* dev = Interface::GetDevice();
+	BaseApp* baseApp = BaseApp::Get();
+	Runtime* runtime = baseApp->GetCurrentRuntime();
+
+	SetupSceneForRendering();
+
+	Font* largeFont = Interface::GetDevice()->GetLargeFont();
+	Font* smallFont = Interface::GetDevice()->GetSmallFont();
+
+	// draw background
+	float w = (float)dev->GetWidth();
+	float h = (float)dev->GetHeight();
+	Menu* selectedMenu = GetMenuById(activeMenu);
+	if (selectedMenu != NULL)
+	{
+		Texture* texture = selectedMenu->GetBackgroundTexture();
+		dev->FillRect(D3DXVECTOR2(0,0),D3DXVECTOR2(w,h),white,texture);
+
+		// draw game title
+		D3DXCOLOR specialColour = D3DXCOLOR(0,brightNess,brightNess,1);
+		largeFont->Write(10, 10, "GRAVITY FORCE X", specialColour);
+
+		// draw menu name
+		float menux = 40;
+		float menuy = 80;
+		largeFont->Write(menux,menuy,menu[activeMenu]->GetName(), white);
+
+		float spacing = 25;
+		float xpos = menux+5;
+		float ypos = menuy+50;
+
+		D3DXCOLOR col;
+		std::vector<MenuItem*> items = selectedMenu->GetItems();
+		for (int i=0; i < items.size(); i++)
+		{
+			bool selected = (activeItem == i);
+			MenuItem* item = items[i];
+			if (item->GetShowLevels())
+			{
+				menuLevelManager->Draw(item->GetNumPlayers(), selected, xpos, ypos);
+			}
+			else if (item->GetShowShips())
+			{
+				menuShipManager->Draw(selected, xpos,ypos);
+			}
+			else
+			{
+				D3DXCOLOR cursorColour = white;
+				col = white;
+				if (selected)
+				{
+					if (blinking)
+					{
+						col = selColour;
+						cursorColour = D3DXCOLOR(1,0.5f,0,1);
+					}
+					else
+					{
+						col = selColourOff;
+						cursorColour = D3DXCOLOR(0.5f,1,0,1);
+					}
+				}
+
+				smallFont->Write(xpos, ypos, item->GetName(), col);
+
+				if (item->GetShowInputs())
+				{
+					int inputId = item->GetInputId();
+					int input = inputs[inputId];
+					WriteText(xpos + 140, ypos, col, inputNames[input]);
+				}
+				if (item->ControlMusic())
+				{
+					smallFont->Write(xpos + 90, ypos, baseApp->PlayMusic() ? "yes" : "no", white);
+				}
+				if (item->ControlFullscreen())
+				{
+					smallFont->Write(xpos + 150, ypos, baseApp->Fullscreen() ? "yes" : "no", white);
+				}
+				if (item->ControlResolution())
+				{
+					int width = baseApp->Width();
+					int height = baseApp->Height();
+					std::string resolution = System::Int2Str(width) + " x " + System::Int2Str(height);
+					smallFont->Write(xpos + 150, ypos, resolution, white);
+				}
+				if (item->GetAction() == "getname")
+				{
+					smallFont->Write(xpos + 90, ypos, item->UserText() + "_", cursorColour);
+				}
+				if (item->GetAction() == "getserveraddress")
+				{
+					smallFont->Write(xpos + 214, ypos, item->UserText() + "_", cursorColour);
+				}
+
+				ypos += spacing;
+			}
+		}
+	}
+	dev->EndScene();
+	dev->Present();
+}
+
+void MenuManager::GetScreenAndGameType(std::string action, int& screenType, int& gameType)
+{
+	int offset = 0;
+	if (action.substr(0,13) == "sc_horizontal")
+	{
+		screenType = Runtime::SC_HORIZONTAL;
+		offset = 14;
+	}
+	else if (action.substr(0,11) == "sc_vertical")
+	{
+		screenType = Runtime::SC_VERTICAL;
+		offset = 12;
+	}
+
+	std::string gt = action.substr(offset);
+	if (gt == "5")
+	{
+		gameType = Runtime::GT_FIRST_OUT_OF_FIVE;
+	}
+	else if (gt == "10")
+	{
+		gameType = Runtime::GT_FIRST_OUT_OF_TEN;
+	}
+	else if (gt == "5 team")
+	{
+		gameType = Runtime::GT_TEAM_FIRST_OUT_OF_FIVE;
+	}
+	else if (gt == "10 team")
+	{
+		gameType = Runtime::GT_TEAM_FIRST_OUT_OF_TEN;
+	}
+}
+
+void MenuManager::EventLogic(double time)
+{
+	blinkTime += time;
+	if (blinkTime > BLINK_INTERVAL)
+	{
+		blinkTime = 0;
+		blinking = !blinking;
+	}
+
+	// check connection and pass logic on
+	if (NetworkClient::Get()->IsConnected())
+	{
+		NetworkClient::Get()->EventLogic();
+	}
+
+	// get the active item and see what its action is
+	// getname and getserveraddress allow for keyboard input
+	Menu* kbmenu = GetMenuById(activeMenu);
+	if (kbmenu != NULL)
+	{
+		MenuItem* item = kbmenu->GetItems()[activeItem];
+		if (item->GetAction() == "getname" || item->GetAction() == "getserveraddress")
+		{
+			int key = Keyboard::Get()->KeyPress();
+			if (key != 0)
+			{
+				std::string usertext = item->UserText();
+				if (key > 31 && key < 128 && usertext.size() < 40)
+				{
+					char buf[2];
+					buf[0] = (char)key;
+					buf[1] = 0;
+					item->UserText(usertext + buf);
+				}
+				else if (key == 8)
+				{
+					std::string str = usertext.substr(0, usertext.size() - 1);
+					item->UserText(str);
+				}
+			}
+		}
+	}
+
+	brightNessTime += time;
+	if (brightNessTime > BRIGHTNESS_INTERVAL)
+	{
+		brightNess = brightNess + brightNessDirn;
+		if ((brightNessDirn > 0 && brightNess >= BRIGHTNESS_MAX) || (brightNessDirn < 0 && brightNess <= BRIGHTNESS_MIN))
+		{
+			brightNessDirn = -brightNessDirn;
+		}
+	}
+
+	if (Input::CheckEvent(control[CT_ESC]) && lastAction != LA_ESC)
+	{
+		lastAction = LA_ESC;
+
+		Menu* menu = GetMenuById(activeMenu);
+		activeItem = menu->GetItems().size() - 1;
+	}
+
+	// check inputs
+	if ((Input::CheckEvent(control[CT_UP1]) || Input::CheckEvent(control[CT_UP2])) && lastAction != LA_UP)
+	{
+		lastAction = LA_UP;
+
+		// take them up the menu
+		Menu* menu = GetMenuById(activeMenu);
+		if (menu != NULL)
+		{
+			int oldActiveItem = activeItem;
+			std::vector<MenuItem*> items = menu->GetItems();
+			do
+			{
+				if (activeItem > 0)
+				{
+					activeItem--;
+				}
+			}
+			while (items[activeItem]->GetAction().empty() && activeItem>0);
+			if (items[activeItem]->GetAction().empty())
+			{
+				activeItem = oldActiveItem;
+			}
+		}
+	}
+	else if ((Input::CheckEvent(control[CT_DOWN1]) || Input::CheckEvent(control[CT_DOWN2])) && lastAction != LA_DOWN)
+	{
+		lastAction = LA_DOWN;
+
+		// take them up the menu
+		Menu* menu = GetMenuById(activeMenu);
+		if (menu != NULL)
+		{
+			int oldActiveItem = activeItem;
+			std::vector<MenuItem*> items = menu->GetItems();
+			do
+			{
+				if ((activeItem+1) < items.size())
+				{
+					activeItem++;
+				}
+			}
+			while (items[activeItem]->GetAction().empty() && activeItem < items.size());
+			if (items[activeItem]->GetAction().empty())
+			{
+				activeItem = oldActiveItem;
+			}
+		}
+	}
+	else if ((Input::CheckEvent(control[CT_SELECT1]) || Input::CheckEvent(control[CT_SELECT2])) && lastAction != LA_SELECT)
+	{
+		lastAction = LA_SELECT;
+
+		// do the action
+		Menu* menu = GetMenuById(activeMenu);
+		if (menu != NULL)
+		{
+			std::vector<MenuItem*> items = menu->GetItems();
+			if (activeItem < items.size())
+			{
+				// check the current item - if its a ship
+				// add the selection of the ship to the ships array
+				if (items[activeItem]->GetShowShips())
+				{
+					int playerId = items[activeItem]->GetPlayer();
+					if (playerId < ships.size())
+					{
+						ships[playerId] = menuShipManager->GetSelectedShip();
+					}
+					else
+					{
+						ships.push_back(menuShipManager->GetSelectedShip());
+					}
+				}
+
+				// execute the action
+				std::string actionStr = items[activeItem]->GetAction();
+				int index = 0;
+				do
+				{
+					std::string action = System::GetItem(actionStr, ':', index++);
+					if (!action.empty())
+					{
+						ExecuteAction(action);
+					}
+					else
+					{
+						break;
+					}
+				}
+				while (true);
+
+			}
+		}
+	}
+	if (!(Input::CheckEvent(control[CT_UP1]) || Input::CheckEvent(control[CT_UP2])) && lastAction == LA_UP)
+		lastAction = LA_NONE;
+	if (!(Input::CheckEvent(control[CT_DOWN1]) || Input::CheckEvent(control[CT_DOWN2])) && lastAction == LA_DOWN)
+		lastAction = LA_NONE;
+	if (!(Input::CheckEvent(control[CT_SELECT1]) || Input::CheckEvent(control[CT_SELECT2])) && lastAction == LA_SELECT)
+		lastAction = LA_NONE;
+	if (!Input::CheckEvent(control[CT_ESC]) && lastAction == LA_ESC)
+		lastAction = LA_NONE;
+
+	Menu* menu = GetMenuById(activeMenu);
+	if (menu != NULL)
+	{
+		std::vector<MenuItem*> items = menu->GetItems();
+		MenuItem* item = items[activeItem];
+		if (item->GetShowLevels())
+		{
+			menuLevelManager->EventLogic(time);
+		}
+		else if (item->GetShowShips())
+		{
+			menuShipManager->EventLogic(time);
+		}
+	}
+}
+
+void MenuManager::ExecuteAction(std::string action)
+{
+	Menu* menu = GetMenuById(activeMenu);
+	std::vector<MenuItem*> items = menu->GetItems();
+	BaseApp* baseApp = BaseApp::Get();
+	Runtime* rt = baseApp->GetCurrentRuntime();
+
+	// exit game system
+	if (action == "exit")
+	{
+		BaseApp::Get()->Quit();
+		return;
+	}
+	// go to another menu
+	if (action.substr(0,4) == "goto")
+	{
+		activeMenu = System::Str2Int(action.substr(5));
+		activeItem = 0;
+
+		// set the active item on the new menu
+		Menu* menu = GetMenuById(activeMenu);
+		if (menu != NULL)
+		{
+			std::vector<MenuItem*> items = menu->GetItems();
+			while (activeItem < items.size() && items[activeItem]->GetAction().empty())
+			{
+				activeItem++;
+			}
+		}
+		return;
+	}
+	// stop networking
+	if (action == "netstop")
+	{
+		rt->GP_StopNetworkGame();
+	}
+	if (action == "save")
+	{
+		baseApp->SaveSettings();
+	}
+	// host a server game
+	if (action == "netplay 5")
+	{
+		MenuLevel* level = menuLevelManager->GetSelectedLevel();
+		rt->GP_SetLevel(level->GetFile());
+		rt->GP_StartServer(0,5);
+	}
+	if (action == "netplay 10")
+	{
+		MenuLevel* level = menuLevelManager->GetSelectedLevel();
+		rt->GP_SetLevel(level->GetFile());
+		rt->GP_StartServer(1,10);
+	}
+	if (action == "toggleresolution")
+	{
+		int width = baseApp->Width();
+		int height = baseApp->Height();
+		switch (width)
+		{
+		case 640:
+			{
+				width = 800;
+				height = 600;
+				break;
+			}
+		case 800:
+			{
+				width = 1024;
+				height = 768;
+				break;
+			}
+		case 1024:
+			{
+				width = 1280;
+				height = 1024;
+				break;
+			}
+		default:
+			{
+				width = 640;
+				height = 480;
+			}
+		}
+
+		baseApp->Width(width);
+		baseApp->Height(height);
+	}
+	if (action == "togglefullscreen")
+	{
+		baseApp->Fullscreen(!baseApp->Fullscreen());
+	}
+	if (action == "togglemusic")
+	{
+		// invert music toggle
+		baseApp->PlayMusic(!baseApp->PlayMusic());
+	}
+	// join a network server
+	if (action == "netjoin")
+	{
+		// first get the name and server address
+		// action="getname"
+		// action="getserveraddress"
+		std::string serverName;
+		std::string playerName;
+		std::vector<MenuItem*>::iterator pos = items.begin();
+		while (pos != items.end())
+		{
+			MenuItem* item = *pos;
+			if (item->GetAction() == "getname")
+			{
+				playerName = item->UserText();
+			}
+			if (item->GetAction() == "getserveraddress")
+			{
+				serverName = item->UserText();
+			}
+			pos++;
+		}
+		if (!serverName.empty() && !playerName.empty())
+		{
+			rt->GP_SetScreenType(Runtime::SC_SINGLE);
+			rt->GP_NumPlayers(1);
+			rt->GP_SetShip(0, ships[0]->ShipId());
+			rt->GP_SetInput(0, inputs[0]);
+			rt->GP_StartNetworkGame(playerName, serverName, GAME_PORT);
+			return;
+		}
+	}
+	if (action.substr(0,5) == "play ")
+	{
+		int screenType;
+		int gameType;
+		GetScreenAndGameType(action.substr(5), screenType, gameType);
+
+		rt->GP_SetGameType(gameType);
+		rt->GP_NumPlayers(2);
+		rt->GP_SetScreenType(screenType);
+		rt->GP_SetShip(0, ships[0]->ShipId());
+		rt->GP_SetShip(1, ships[1]->ShipId());
+		rt->GP_SetInput(0, inputs[0]);
+		rt->GP_SetInput(1, inputs[1]);
+		MenuLevel* level = menuLevelManager->GetSelectedLevel();
+		rt->GP_SetLevel(level->GetFile());
+		// menu active is if the game fails to run
+		rt->GP_StartGame();
+		return;
+	}
+	if (action == "setcontrol")
+	{
+		if (items[activeItem]->GetShowInputs())
+		{
+			int inputId = items[activeItem]->GetInputId();
+			int input = inputs[inputId];
+			input++;
+			if (input > Input::CTRL_GAMEPAD4)
+			{
+				input = Input::CTRL_KEYBOARD0;
+			}
+			inputs[inputId] = input;
+		}
+	}
+}
+
+Menu* MenuManager::GetMenuById(int id)
+{
+	for (int i=0; i < menu.size(); i++)
+	{
+		if (menu[i] != NULL && menu[i]->GetId() == id)
+			return menu[i];
+	}
+	return NULL;
+}
+
+std::map<int,Menu*> MenuManager::GetMenus()
+{
+	return menu;
+}
+
+void MenuManager::SetMenus(std::map<int,Menu*> _menu)
+{
+	menu = _menu;
+}
+

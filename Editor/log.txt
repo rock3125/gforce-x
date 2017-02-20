@@ -1,0 +1,8 @@
+initialise devicefinding best windowed modecreating d3d settingsinitialising 3d environmentbuilding present parameterscreating devicedevice creation successfuldevice:HAL (pure hw vp): RADEON 9600 SERIES   device is now ready
+loading object-library objects
+loaded library
+
+loaded library
+detected 0 game pads
+
+initialisation successful
