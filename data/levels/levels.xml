@@ -1,0 +1,6 @@
+<levels>
+
+  <level name="Level 1" icon="levels\level1\icon.jpg" file="levels\level1\level1.xml" maxplayers="4" maxteams="2" />
+  <level name="Level 2" icon="levels\level2\icon.jpg" file="levels\level2\level2.xml" maxplayers="4" maxteams="2" />
+
+</levels>

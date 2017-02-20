@@ -1,0 +1,9 @@
+<ships>
+
+  <ship model="ships\ship1.wrl" icon="ships\ship1.tga" offset="6.5" maxspeed="1.0" maxaccel="0.010" accel="0.0035" rv="5" fu="0.0004" bullets="200" bulletcolour="0.5,0,0" missiles="20" ss="0.4" />
+  <ship model="ships\ship2.wrl" icon="ships\ship2.tga" offset="6.5" maxspeed="1.2" maxaccel="0.015" accel="0.0038" rv="5" fu="0.0005" bullets="120" bulletcolour="1,0.5,0" missiles="15" ss="0.3" />
+  <ship model="ships\ship3.wrl" icon="ships\ship3.tga" offset="6.5" maxspeed="1.5" maxaccel="0.020" accel="0.0048" rv="7" fu="0.0008" bullets="150" bulletcolour="1,1,0.5" missiles="15" ss="0.2" />
+  <ship model="ships\ship4.wrl" icon="ships\ship4.tga" offset="6.5" maxspeed="0.9" maxaccel="0.025" accel="0.0050" rv="5" fu="0.0008" bullets="100" bulletcolour="1,0.5,0.5" missiles="10" ss="0.1" />
+
+</ships>
+

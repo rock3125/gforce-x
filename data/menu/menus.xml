@@ -1,0 +1,162 @@
+<menus>
+
+  <menu id="0" name="MainMenu.tga" background="bg1.jpg">
+    <item name="SplitScreen.tga" action="goto 2" />
+    <item name="Controls.tga" action="goto 16" />
+    <item name="About.tga" action="goto 4" />
+    <item name="blank.tga" action="" />
+    <item name="Quit.tga" action="exit" />
+  </menu>
+
+  <menu id="1" name="SinglePlayerMenu.tga" background="bg1.jpg">
+    <item name="todo.tga" action="" />
+    <item name="blank.tga" action="" />
+    <item name="return.tga" action="goto 0" />
+  </menu>
+
+  <menu id="2" name="SplitScreenMenu.tga" background="bg1.jpg">
+    <item name="TwoPlayerHorizontal.tga" action="goto 5" />
+    <item name="TwoPlayerVertical.tga" action="goto 6" />
+    <item name="FourPlayerGame.tga" action="goto 7" />
+    <item name="blank.tga" action="" />
+    <item name="return.tga" action="goto 0" />
+  </menu>
+
+  <menu id="3" name="NetworkGameMenu.tga" background="bg1.jpg">
+    <item name="todo.tga" action="" />
+    <item name="blank.tga" action="" />
+    <item name="return.tga" action="goto 0" />
+  </menu>
+
+  <menu id="4" name="AboutMenu.tga" background="bg1.jpg">
+    <item name="blank.tga" action="" />
+    <item name="AboutLine1.tga" action="" />
+    <item name="AboutLine2.tga" action="" />
+    <item name="blank.tga" action="" />
+    <item name="return.tga" action="goto 0" />
+  </menu>
+
+
+
+
+
+  <menu id="5" name="SelectTwoPlayerHorizontal.tga" background="bg1.jpg">
+    <item name="blank.tga" action="" />
+    <item name="levels" showlevels="true" numplayers="2" action="goto 8" />
+    <item name="return.tga" action="goto 2" />
+  </menu>
+
+  <menu id="6" name="SelectTwoPlayerVertical.tga" background="bg1.jpg">
+    <item name="blank.tga" action="" />
+    <item name="levels" showlevels="true" numplayers="2" action="goto 10" />
+    <item name="return.tga" action="goto 2" />
+  </menu>
+
+  <menu id="7" name="SelectFourPlayerLevel.tga" background="bg1.jpg">
+    <item name="blank.tga" action="" />
+    <item name="levels" showlevels="true" numplayers="4" action="goto 12" />
+    <item name="return.tga" action="goto 2" />
+  </menu>
+
+
+
+
+
+  <menu id="8" name="Player1ShipMenu.tga" background="bg1.jpg">
+    <item name="blank.tga" action="" />
+    <item name="ships" showships="true" player="0" action="goto 9" />
+    <item name="return.tga" action="goto 5" />
+  </menu>
+
+  <menu id="9" name="Player2ShipMenu.tga" background="bg1.jpg">
+    <item name="blank.tga" action="" />
+    <item name="ships" showships="true" player="1" action="goto 19" />
+    <item name="return.tga" action="goto 8" />
+  </menu>
+
+
+
+
+
+  <menu id="10" name="Player1ShipMenu.tga" background="bg1.jpg">
+    <item name="blank.tga" action="" />
+    <item name="ships" showships="true" player="0" action="goto 11" />
+    <item name="return.tga" action="goto 6" />
+  </menu>
+
+  <menu id="11" name="Player2ShipMenu.tga" background="bg1.jpg">
+    <item name="blank.tga" action="" />
+    <item name="ships" showships="true" player="1" action="goto 17" />
+    <item name="return.tga" action="goto 10" />
+  </menu>
+
+
+
+
+
+  <menu id="12" name="Player1ShipMenu.tga" background="bg1.jpg">
+    <item name="blank.tga" action="" />
+    <item name="ships" showships="true" player="0" action="goto 13" />
+    <item name="return.tga" action="goto 7" />
+  </menu>
+
+  <menu id="13" name="Player2ShipMenu.tga" background="bg1.jpg">
+    <item name="blank.tga" action="" />
+    <item name="ships" showships="true" player="1" action="goto 14" />
+    <item name="return.tga" action="goto 12" />
+  </menu>
+
+  <menu id="14" name="Player3ShipMenu.tga" background="bg1.jpg">
+    <item name="blank.tga" action="" />
+    <item name="ships" showships="true" player="2" action="goto 15" />
+    <item name="return.tga" action="goto 13" />
+  </menu>
+
+  <menu id="15" name="Player4ShipMenu.tga" background="bg1.jpg">
+    <item name="blank.tga" action="" />
+    <item name="ships" showships="true" player="3" action="goto 18" />
+    <item name="return.tga" action="goto 14" />
+  </menu>
+
+
+
+
+
+
+  <menu id="16" name="ControlsMenu.tga" background="bg1.jpg">
+    <item name="Player1.tga" selectinput="0" inputdefault="keyboard" action="setcontrol" />
+    <item name="Player2.tga" selectinput="1" inputdefault="gamepad1" action="setcontrol" />
+    <item name="Player3.tga" selectinput="2" inputdefault="gamepad2" action="setcontrol" />
+    <item name="Player4.tga" selectinput="3" inputdefault="gamepad3" action="setcontrol" />
+    <item name="return.tga" action="goto 0" />
+  </menu>
+
+
+
+
+
+
+  <menu id="17" name="GameTypeMenu.tga" background="bg1.jpg">
+    <item name="FirstOutOfTen.tga" action="play sc_vertical 10" />
+    <item name="blank.tga" action="" />
+    <item name="return.tga" action="goto 11" />
+  </menu>
+
+  <menu id="18" name="GameTypeMenu.tga" background="bg1.jpg">
+    <item name="FirstOutOfFive.tga" action="play sc_four 5" />
+    <item name="FirstOutOfTen.tga" action="play sc_four 10" />
+    <item name="TeamFirstOutOfFive.tga" action="play sc_four 5 team" />
+    <item name="TeamFirstOutOfTen.tga" action="play sc_four 10 team" />
+    <item name="blank.tga" action="" />
+    <item name="return.tga" action="goto 15" />
+  </menu>
+
+  <menu id="19" name="GameTypeMenu.tga" background="bg1.jpg">
+    <item name="FirstOutOfTen.tga" action="play sc_horizontal 10" />
+    <item name="blank.tga" action="" />
+    <item name="return.tga" action="goto 9" />
+  </menu>
+
+
+
+</menus>
