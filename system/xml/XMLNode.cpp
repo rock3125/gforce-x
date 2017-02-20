@@ -61,10 +61,7 @@ void XmlNode::RecursiveToString(XmlNode* xml, StringBuilder& sb, int indent)
 			sb.Append("=\"" + (*pos).second + "\"");
 			pos++;
 		}
-		if (!(xml->children.empty() && xml->innerValue.empty()))
-		{
-			sb.Append(">");
-		}
+		sb.Append(">");
 	}
 
 	if (xml->children.empty())
@@ -88,14 +85,7 @@ void XmlNode::RecursiveToString(XmlNode* xml, StringBuilder& sb, int indent)
 
 	if (!xml->GetTag().empty())
 	{
-		if (xml->children.empty() && xml->innerValue.empty())
-		{
-			sb.Append(" />\n");
-		}
-		else
-		{
-			sb.Append("</"+xml->GetTag()+">\n");
-		}
+		sb.Append("</"+xml->GetTag()+">\n");
 	}
 }
 
@@ -154,17 +144,13 @@ void XmlNode::SetTag(const std::string& _tag)
 	tag=_tag;
 }
 
-XmlNode* XmlNode::NewChild(const std::string& tag, int version)
+BaseStreamer& XmlNode::NewChild(const std::string& tag, int version)
 {
 	XmlNode* n = new XmlNode();
 	n->tag = tag;
 	n->values["version"] = System::Int2Str(version);
-	return n;
-}
-
-void XmlNode::Add(XmlNode* node)
-{
-	children.push_back(node);
+	children.push_back(n);
+	return *n;
 }
 
 XmlNode* XmlNode::GetChildRecursive(XmlNode* b, const std::string& tag)
@@ -181,27 +167,7 @@ XmlNode* XmlNode::GetChildRecursive(XmlNode* b, const std::string& tag)
 	return NULL;
 }
 
-void XmlNode::CheckVersion(XmlNode* node, std::string tag, int versionNumber)
-{
-	if (node == NULL)
-	{
-		throw new Exception("node is NULL");
-	}
-	if (node->GetTag() != tag)
-	{
-		throw new Exception("node tag incorrect, expected \"" + tag + "\", found \"" + node->GetTag() + "\"");
-	}
-
-	std::string version = node->GetValue("version");
-	if (version != System::Int2Str(versionNumber))
-	{
-		std::string errStr = "node with tag " + tag + " actual version \"" + version;
-		errStr = errStr + "\", expected version \"" + System::Int2Str(versionNumber) + "\"";
-		throw new Exception(errStr);
-	}
-}
-
-XmlNode* XmlNode::GetChild(const std::string& tag, int version)
+BaseStreamer& XmlNode::GetChild(const std::string& tag, int version)
 {
 	XmlNode* node = GetChildRecursive(this,tag);
 	if (node == NULL)
@@ -213,21 +179,15 @@ XmlNode* XmlNode::GetChild(const std::string& tag, int version)
 	int version2 = System::Str2Int(node->GetValue("version"));
 	if (version2 > version)
 		throw new Exception("version too new, update your client");
-	return node;
+	return *node;
 }
 
-bool XmlNode::HasChild(const std::string& tag)
-{
-	XmlNode* node = GetChildRecursive(this,tag);
-	return (node != NULL);
-}
-
-XmlNode* XmlNode::GetChild(const std::string& tag)
+BaseStreamer& XmlNode::GetChild(const std::string& tag)
 {
 	XmlNode* node = GetChildRecursive(this,tag);
 	if (node == NULL)
 		throw new Exception("node " + this->tag + " does not have a child " + tag);
-	return node;
+	return *node;
 }
 
 XmlNode* XmlNode::GetChildNode(const std::string& tag)

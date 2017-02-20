@@ -61,34 +61,33 @@ bool Object::Isa(ObjectType otype)
 	return type[otype];
 }
 
-XmlNode* Object::Write()
+void Object::Write(BaseStreamer& _f)
 {
-	XmlNode* node = XmlNode::NewChild(objectSignature, objectVersion);
+	BaseStreamer& f = _f.NewChild(objectSignature,objectVersion);
 
-	node->Write("name", name);
-	node->Write("oid", oid);
+	f.Write("name",name);
+	f.Write("oid",oid);
 
 	std::string bits;
 	for (int i=OT_FIRST; i<OT_LAST; i++)
 	{
 		bits = bits + (type[i]?"1":"0");
 	}
-	node->Write("typeSet", bits);
-	return node;
+	f.Write("typeSet",bits);
 }
 
-void Object::Read(XmlNode* node)
+void Object::Read(BaseStreamer& _f)
 {
-	XmlNode::CheckVersion(node, objectSignature, objectVersion);
+	BaseStreamer& f = _f.GetChild(objectSignature,objectVersion);
 
-	node->Read("name",name);
-	node->Read("oid",oid);
+	f.Read("name",name);
+	f.Read("oid",oid);
 
 	std::string bits;
-	node->Read("typeSet", bits);
-	for (int i = OT_FIRST; i < OT_LAST; i++)
+	f.Read("typeSet",bits);
+	for (int i=OT_FIRST; i<OT_LAST; i++)
 	{
-		type[i] = (bits[i-OT_FIRST] == '1');
+		type[i]=(bits[i-OT_FIRST]=='1');
 	}
 }
 

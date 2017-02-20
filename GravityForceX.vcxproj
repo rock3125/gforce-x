@@ -1,0 +1,519 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{6E91BF1D-352D-4DA9-AF89-4E717741C4F6}</ProjectGuid>
+    <RootNamespace>GravityForceX</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>NotSet</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>NotSet</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)$(Configuration)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level2</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>d3dx9dt.lib;dxguid.lib;dinput8.lib;dinput.lib;d3d9.lib;strmiids.lib;winmm.lib;dsound.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>libcp.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>..;.;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level2</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>d3dx9.lib;d3dx9d.lib;dinput8.lib;d3d9.lib;dxguid.lib;winmm.lib</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>libcp.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="d3d9\d3dData.h" />
+    <ClInclude Include="d3d9\d3denumeration.h" />
+    <ClInclude Include="d3d9\d3dsettings.h" />
+    <ClInclude Include="d3d9\device.h" />
+    <ClInclude Include="d3d9\Interface.h" />
+    <ClInclude Include="d3d9\InvalidatableDevice.h" />
+    <ClInclude Include="d3d9\texture.h" />
+    <ClInclude Include="d3d9\textureCache.h" />
+    <ClInclude Include="Game\base.h" />
+    <ClInclude Include="Game\bullet.h" />
+    <ClInclude Include="Game\commonModels.h" />
+    <ClInclude Include="Game\explosion.h" />
+    <ClInclude Include="Game\indestructableRegion.h" />
+    <ClInclude Include="Game\missile.h" />
+    <ClInclude Include="Game\modelMap.h" />
+    <ClInclude Include="Game\shield.h" />
+    <ClInclude Include="Game\ship.h" />
+    <ClInclude Include="Menu\menu.h" />
+    <ClInclude Include="Menu\menuItem.h" />
+    <ClInclude Include="Menu\menuLevel.h" />
+    <ClInclude Include="Menu\menuLevelManager.h" />
+    <ClInclude Include="Menu\menuManager.h" />
+    <ClInclude Include="Menu\menuShip.h" />
+    <ClInclude Include="Menu\menuShipManager.h" />
+    <ClInclude Include="runtime\gf10Runtime.h" />
+    <ClInclude Include="runtime\runtime.h" />
+    <ClInclude Include="system\BaseApp.h" />
+    <ClInclude Include="system\cpuid.h" />
+    <ClInclude Include="system\exception.h" />
+    <ClInclude Include="system\fileLog.h" />
+    <ClInclude Include="system\font.h" />
+    <ClInclude Include="system\gamePad.h" />
+    <ClInclude Include="system\input.h" />
+    <ClInclude Include="system\keyboard.h" />
+    <ClInclude Include="system\log.h" />
+    <ClInclude Include="system\macros.h" />
+    <ClInclude Include="system\ModelImporter.h" />
+    <ClInclude Include="system\objectFactory.h" />
+    <ClInclude Include="system\particle.h" />
+    <ClInclude Include="system\particleSource.h" />
+    <ClInclude Include="system\StringBuilder.h" />
+    <ClInclude Include="system\system.h" />
+    <ClInclude Include="system\timer.h" />
+    <ClInclude Include="system\tokeniser.h" />
+    <ClInclude Include="system\converters\bvh\bvh.h" />
+    <ClInclude Include="system\converters\obj\objImport.h" />
+    <ClInclude Include="system\converters\vrml\VRMLExport.h" />
+    <ClInclude Include="system\converters\vrml\VRMLParser.h" />
+    <ClInclude Include="system\converters\wgckImport\importCompoundObject.h" />
+    <ClInclude Include="system\converters\x\x.h" />
+    <ClInclude Include="system\interpreter\function.h" />
+    <ClInclude Include="system\interpreter\interpreter.h" />
+    <ClInclude Include="system\interpreter\script.h" />
+    <ClInclude Include="system\interpreter\scriptNode.h" />
+    <ClInclude Include="system\interpreter\symbolNode.h" />
+    <ClInclude Include="system\interpreter\symbolTable.h" />
+    <ClInclude Include="system\interpreter\SystemFacade.h" />
+    <ClInclude Include="system\model\boundingBox.h" />
+    <ClInclude Include="system\model\camera.h" />
+    <ClInclude Include="system\model\level.h" />
+    <ClInclude Include="system\model\light.h" />
+    <ClInclude Include="system\model\mesh.h" />
+    <ClInclude Include="system\model\model.h" />
+    <ClInclude Include="system\model\object.h" />
+    <ClInclude Include="system\model\prs.h" />
+    <ClInclude Include="system\model\worldObject.h" />
+    <ClInclude Include="system\signals\addObjectObserver.h" />
+    <ClInclude Include="system\signals\cancelObserver.h" />
+    <ClInclude Include="system\signals\creationObserver.h" />
+    <ClInclude Include="system\signals\levelObserver.h" />
+    <ClInclude Include="system\signals\logObserver.h" />
+    <ClInclude Include="system\signals\objectLibraryObserver.h" />
+    <ClInclude Include="system\signals\objectObserver.h" />
+    <ClInclude Include="system\signals\progressObserver.h" />
+    <ClInclude Include="system\signals\selectionObserver.h" />
+    <ClInclude Include="system\skin\bone.h" />
+    <ClInclude Include="system\skin\boneAnimation.h" />
+    <ClInclude Include="system\skin\boneInfluence.h" />
+    <ClInclude Include="system\skin\skin.h" />
+    <ClInclude Include="system\streamers\baseStreamer.h" />
+    <ClInclude Include="system\streamers\fileStreamer.h" />
+    <ClInclude Include="system\xml\XMLNode.h" />
+    <ClInclude Include="system\xml\XMLParser.h" />
+    <ClInclude Include="GF10App.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="standardFirst.h" />
+    <ClInclude Include="stdafx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="d3d9\d3denumeration.cpp" />
+    <ClCompile Include="d3d9\device.cpp" />
+    <ClCompile Include="d3d9\Interface.cpp" />
+    <ClCompile Include="d3d9\InvalidatableDevice.cpp" />
+    <ClCompile Include="d3d9\texture.cpp" />
+    <ClCompile Include="d3d9\textureCache.cpp" />
+    <ClCompile Include="Game\base.cpp" />
+    <ClCompile Include="Game\bullet.cpp" />
+    <ClCompile Include="Game\commonModels.cpp" />
+    <ClCompile Include="Game\explosion.cpp" />
+    <ClCompile Include="Game\indestructableRegion.cpp" />
+    <ClCompile Include="Game\missile.cpp" />
+    <ClCompile Include="Game\modelMap.cpp" />
+    <ClCompile Include="Game\shield.cpp" />
+    <ClCompile Include="Game\ship.cpp" />
+    <ClCompile Include="Menu\menu.cpp" />
+    <ClCompile Include="Menu\menuItem.cpp" />
+    <ClCompile Include="Menu\menuLevel.cpp" />
+    <ClCompile Include="Menu\menuLevelManager.cpp" />
+    <ClCompile Include="Menu\menuManager.cpp" />
+    <ClCompile Include="Menu\menuShip.cpp" />
+    <ClCompile Include="Menu\menuShipManager.cpp" />
+    <ClCompile Include="runtime\gf10Runtime.cpp" />
+    <ClCompile Include="runtime\runtime.cpp" />
+    <ClCompile Include="system\BaseApp.cpp" />
+    <ClCompile Include="system\cpuid.cpp" />
+    <ClCompile Include="system\fileLog.cpp" />
+    <ClCompile Include="system\font.cpp" />
+    <ClCompile Include="system\gamePad.cpp" />
+    <ClCompile Include="system\input.cpp" />
+    <ClCompile Include="system\keyboard.cpp" />
+    <ClCompile Include="system\log.cpp" />
+    <ClCompile Include="system\modelImporter.cpp" />
+    <ClCompile Include="system\objectFactory.cpp" />
+    <ClCompile Include="system\particle.cpp" />
+    <ClCompile Include="system\particleSource.cpp" />
+    <ClCompile Include="system\StringBuilder.cpp" />
+    <ClCompile Include="system\system.cpp" />
+    <ClCompile Include="system\timer.cpp" />
+    <ClCompile Include="system\tokeniser.cpp" />
+    <ClCompile Include="system\converters\bvh\bvh.cpp" />
+    <ClCompile Include="system\converters\obj\objImport.cpp" />
+    <ClCompile Include="system\converters\vrml\VRMLExport.cpp" />
+    <ClCompile Include="system\converters\vrml\VRMLParser.cpp" />
+    <ClCompile Include="system\converters\wgckImport\importCompoundObject.cpp" />
+    <ClCompile Include="system\converters\x\x.cpp" />
+    <ClCompile Include="system\interpreter\function.cpp" />
+    <ClCompile Include="system\interpreter\interpreter.cpp" />
+    <ClCompile Include="system\interpreter\script.cpp" />
+    <ClCompile Include="system\interpreter\scriptNode.cpp" />
+    <ClCompile Include="system\interpreter\symbolNode.cpp" />
+    <ClCompile Include="system\interpreter\symbolTable.cpp" />
+    <ClCompile Include="system\interpreter\SystemFacade.cpp" />
+    <ClCompile Include="system\model\boundingBox.cpp" />
+    <ClCompile Include="system\model\camera.cpp" />
+    <ClCompile Include="system\model\level.cpp" />
+    <ClCompile Include="system\model\light.cpp" />
+    <ClCompile Include="system\model\mesh.cpp" />
+    <ClCompile Include="system\model\model.cpp" />
+    <ClCompile Include="system\model\object.cpp" />
+    <ClCompile Include="system\model\prs.cpp" />
+    <ClCompile Include="system\model\worldObject.cpp" />
+    <ClCompile Include="system\signals\addObjectObserver.cpp" />
+    <ClCompile Include="system\signals\cancelObserver.cpp" />
+    <ClCompile Include="system\signals\creationObserver.cpp" />
+    <ClCompile Include="system\signals\levelObserver.cpp" />
+    <ClCompile Include="system\signals\logObserver.cpp" />
+    <ClCompile Include="system\signals\objectLibraryObserver.cpp" />
+    <ClCompile Include="system\signals\objectObserver.cpp" />
+    <ClCompile Include="system\signals\progressObserver.cpp" />
+    <ClCompile Include="system\signals\selectionObserver.cpp" />
+    <ClCompile Include="system\skin\bone.cpp" />
+    <ClCompile Include="system\skin\boneAnimation.cpp" />
+    <ClCompile Include="system\skin\boneInfluence.cpp" />
+    <ClCompile Include="system\skin\skin.cpp" />
+    <ClCompile Include="system\streamers\fileStreamer.cpp" />
+    <ClCompile Include="system\xml\XMLNode.cpp" />
+    <ClCompile Include="system\xml\XMLParser.cpp" />
+    <ClCompile Include="GF10App.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\explosion\expl0.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\explosion\expl1.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\explosion\expl2.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\explosion\expl3.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\explosion\expl4.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\explosion\expl5.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\explosion\expl6.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\icons\bullet.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\icons\fuel.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\icons\shield.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\levels\levels.xml">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\levels\level1\icon.jpg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\levels\level1\level1.bmp">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\levels\level1\level1.xml">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\levels\level2\icon.jpg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\levels\level2\level2.bmp">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\levels\level2\level2.xml">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\levels\textures\sandwave.jpg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\levels\textures\stonetile10.jpg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\About.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\AboutLine1.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\AboutLine2.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\AboutMenu.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\bg1.jpg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\blank.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Controls.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\ControlsMenu.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\FirstOutOfFive.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\FirstOutOfTen.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\FourPlayerGame.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Gamepad1.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Gamepad2.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Gamepad3.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Gamepad4.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\GameTypeMenu.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\GravityForceX.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Keyboard.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\MainMenu.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\menus.xml">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\NetworkGame.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\NetworkGameMenu.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Player1.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Player1ShipMenu.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Player2.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Player2ShipMenu.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Player3.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Player3ShipMenu.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Player4.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Player4ShipMenu.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\Quit.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\return.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\SelectFourPlayerLevel.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\SelectTwoPlayerHorizontal.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\SelectTwoPlayerVertical.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\SinglePlayer.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\SinglePlayerMenu.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\SplitScreen.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\SplitScreenMenu.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\TeamFirstOutOfFive.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\TeamFirstOutOfTen.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\todo.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\TwoPlayerHorizontal.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\menu\TwoPlayerVertical.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\objects\base.wrl">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\objects\bullet.wrl">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\objects\landingPad.wrl">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\objects\missile.wrl">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\objects\Neuropol10.fnt">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\objects\particle.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\objects\shield.jpg">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\objects\shield.wrl">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\objects\spaceship.wrl">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\ships\ship1.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\ships\ship1.wrl">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\ships\ship2.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\ships\ship2.wrl">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\ships\ship3.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\ships\ship3.wrl">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\ships\ship4.tga">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\ships\ship4.wrl">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="data\ships\ships.xml">
+      <DeploymentContent>true</DeploymentContent>
+    </None>
+    <None Include="settings.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="GravityForceX.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

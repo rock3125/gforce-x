@@ -14,8 +14,6 @@
 #include "game/ship.h"
 #include "game/base.h"
 #include "game/indestructableRegion.h"
-#include "game/turret.h"
-#include "game/water.h"
 
 #include "system/converters/vrml/vrmlParser.h"
 
@@ -125,14 +123,6 @@ WorldObject* ObjectFactory::CreateObject(WorldObject::WorldType worldType)
 		{
 			return new IndestructableRegion();
 		}
-		case WorldObject::TYPE_TURRET:
-		{
-			return new Turret();
-		}
-		case WorldObject::TYPE_WATER:
-		{
-			return new Water();
-		}
 	}
 	if (worldType>=WorldObject::TYPE_CUSTOM)
 	{
@@ -207,14 +197,6 @@ bool ObjectFactory::Isa(WorldObject* wo,WorldObject::WorldType worldType)
 		{
 			return dynamic_cast<IndestructableRegion*>(wo)!=NULL;
 		}
-		case WorldObject::TYPE_TURRET:
-		{
-			return dynamic_cast<Turret*>(wo)!=NULL;
-		}
-		case WorldObject::TYPE_WATER:
-		{
-			return dynamic_cast<Water*>(wo)!=NULL;
-		}
 	}
 	return false;
 }
@@ -271,16 +253,6 @@ WorldObject* ObjectFactory::DeepCopy(WorldObject* wo)
 	{
 		IndestructableRegion* o = dynamic_cast<IndestructableRegion*>(w);
 		*o = *dynamic_cast<IndestructableRegion*>(wo);
-	}
-	else if (Isa(w,WorldObject::TYPE_TURRET))
-	{
-		Turret* o = dynamic_cast<Turret*>(w);
-		*o = *dynamic_cast<Turret*>(wo);
-	}
-	else if (Isa(w,WorldObject::TYPE_WATER))
-	{
-		Water* o = dynamic_cast<Water*>(w);
-		*o = *dynamic_cast<Water*>(wo);
 	}
 	else
 	{
@@ -339,14 +311,6 @@ std::string ObjectFactory::GetWorldTypeName(WorldObject::WorldType worldType)
 		{
 			return "IndestructableRegion";
 		}
-		case WorldObject::TYPE_TURRET:
-		{
-			return "Turret";
-		}
-		case WorldObject::TYPE_WATER:
-		{
-			return "Water";
-		}
 	}
 
 	if (worldType>=WorldObject::TYPE_CUSTOM)
@@ -376,11 +340,9 @@ std::vector<WorldObject::WorldType> ObjectFactory::GetCreatableObjectList()
 //	creatableObjects.push_back(WorldObject::TYPE_LIGHT);
 //	creatableObjects.push_back(WorldObject::TYPE_SKIN);
 	creatableObjects.push_back(WorldObject::TYPE_MODELMAP);
-//	creatableObjects.push_back(WorldObject::TYPE_SHIP);
+	creatableObjects.push_back(WorldObject::TYPE_SHIP);
 	creatableObjects.push_back(WorldObject::TYPE_BASE);
 	creatableObjects.push_back(WorldObject::TYPE_INDESTRUCTABLEREGION);
-	creatableObjects.push_back(WorldObject::TYPE_TURRET);
-	creatableObjects.push_back(WorldObject::TYPE_WATER);
 
 //	for (int i=0; i<customObjects.size(); i++)
 //	{

@@ -16,7 +16,6 @@ public:
 
 	bool Load(const std::string& fname);
 	void Write(float x,float y,const std::string& str,D3DXCOLOR colour);
-	void Write(float x, float y, const std::string& str);
 
 	float GetWidth(const std::string& str);
 	float GetCharWidth( char ch );

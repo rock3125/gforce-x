@@ -8,13 +8,11 @@ Time* Time::singleton = NULL;
 
 /////////////////////////////////////////////////////////////////////////////
 
-Time* Time::Get()
+Time& Time::GetTimer()
 {
 	if (!singleton)
-	{
 		singleton=new Time();
-	}
-	return singleton;
+	return *singleton;
 }
 
 void Time::Destroy()
@@ -51,20 +49,20 @@ double Time::FrameTime() const
 
 void Time::Initialise()
 {
-	_int64 dTicksPerSec =0;
+	_int64	dTicksPerSec =0;
 
 	if (QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER *>(&dTicksPerSec)))
 	{
 		// performance counter is available, use it instead of multimedia timer
 		QueryPerformanceCounter(reinterpret_cast<LARGE_INTEGER *>(&dTimerStart));
-		fSecsPerTick = 1.0 / (static_cast<double>(dTicksPerSec));
+		fSecsPerTick = (1.0)/(static_cast<float>(dTicksPerSec));
 		pfnUpdate = &Time::GetPerformanceCounterTime;
 	}
 	else
 	{
 		// Use MM timer if unable to use the High Frequency timer
 		dTimerStart = timeGetTime();
-		fSecsPerTick = 0.001;
+		fSecsPerTick = 1.0/1000.0;
 		pfnUpdate = &Time::GetMMTime;
 	}
 }

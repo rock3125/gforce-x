@@ -2,7 +2,7 @@
 
 #include "runtime/editorRuntime.h"
 
-#include "system/BaseApp.h"
+#include "system/mainApp.h"
 #include "system/objectFactory.h"
 
 #include "system/model/camera.h"
@@ -13,9 +13,6 @@
 
 #include "game/ship.h"
 #include "game/base.h"
-#include "game/turret.h"
-#include "game/indestructableRegion.h"
-#include "game/water.h"
 #include "game/modelMap.h"
 #include "game/commonModels.h"
 
@@ -31,7 +28,7 @@ EditorRuntime::EditorRuntime()
 	, selectedItem(NULL)
 {
 	// background clear colour
-	float col = 0.5f;
+	float col = 0.0f;
 	backgroundColour = D3DXCOLOR(col,col,col,0);
 
 	// grid colours
@@ -41,7 +38,7 @@ EditorRuntime::EditorRuntime()
 	wireframe = false;
 	cullCCW = true;
 
-	splitScreenType = Runtime::SC_HORIZONTAL;
+	splitScreenType = ModelMap::SC_HORIZONTAL;
 }
 
 EditorRuntime::~EditorRuntime()
@@ -86,13 +83,12 @@ void EditorRuntime::AcceptCreation(WorldObject* obj)
 {
 	if (obj!=NULL)
 	{
-		Level* level = currentLevel;
+		Level* level=MainApp::GetApp().GetCurrentLevel();
 		PreCond(level!=NULL);
-
-		WorldObject* root = level->GetSceneRoot();
+		WorldObject* root=level->GetSceneRoot();
 		PreCond(root!=NULL);
+		int count=level->ObjectTypeCount(obj->GetWorldType());
 
-		int count = level->ObjectTypeCount(obj->GetWorldType());
 		std::string name=ObjectFactory::GetWorldTypeName(obj->GetWorldType())+System::Int2Str(count+1);
 		obj->SetName(name);
 
@@ -130,8 +126,7 @@ void EditorRuntime::Initialise()
 	}
 
 	// create common models at startup
-	// TODO: PDV
-	//CommonModels::Get();
+	CommonModels::Get();
 }
 
 void EditorRuntime::EventKeyDown(int key,bool shift,bool ctrl)
@@ -148,7 +143,7 @@ void EditorRuntime::EventKeyDown(int key,bool shift,bool ctrl)
 			std::string str = "Object "+selectedItem->GetName()+" threw an exception\n";
 			str = str + "(" + e->Message() + ")\n";
 			str = str + "this object's script is now disabled";
-			BaseApp::Get()->ShowErrorMessage(str,"KeyDown Event runtime error");
+			MainApp::GetApp().ShowErrorMessage(str,"KeyDown Event runtime error");
 		}
 	}
 }
@@ -167,7 +162,7 @@ void EditorRuntime::EventKeyUp(int key,bool shift,bool ctrl)
 			std::string str = "Object "+selectedItem->GetName()+" threw an exception\n";
 			str = str + "(" + e->Message() + ")\n";
 			str = str + "this object's script is now disabled";
-			BaseApp::Get()->ShowErrorMessage(str,"KeyDown Event runtime error");
+			MainApp::GetApp().ShowErrorMessage(str,"KeyDown Event runtime error");
 		}
 	}
 }
@@ -191,7 +186,7 @@ void EditorRuntime::EventInit()
 				std::string str = "Object "+objects[i]->GetName()+" threw an exception\n";
 				str = str + "(" + e->Message() + ")\n";
 				str = str + "this object's script is now disabled";
-				BaseApp::Get()->ShowErrorMessage(str,"Init Script runtime error");
+				MainApp::GetApp().ShowErrorMessage(str,"Init Script runtime error");
 			}
 		}
 	}
@@ -230,7 +225,7 @@ void EditorRuntime::EventLogic(double time)
 				std::string str = "Object "+objects[i]->GetName()+" threw an exception\n";
 				str = str + "(" + e->Message() + ")\n";
 				str = str + "this object's script is now disabled";
-				BaseApp::Get()->ShowErrorMessage(str,"Logic Script runtime error");
+				MainApp::GetApp().ShowErrorMessage(str,"Logic Script runtime error");
 			}
 		}
 	}
@@ -384,7 +379,7 @@ void EditorRuntime::Draw(double time)
 
 		switch (splitScreenType)
 		{
-			case Runtime::SC_VERTICAL:
+			case ModelMap::SC_VERTICAL:
 			{
 				// setting for 800 x 600 screen only!
 				camera->SetPosition(D3DXVECTOR3(0,0,-250));
@@ -404,7 +399,7 @@ void EditorRuntime::Draw(double time)
 				Draw(time, offsetX, offsetY, shipId2, &source, &dest, splitScreenType);
 				break;
 			}
-			case Runtime::SC_HORIZONTAL:
+			case ModelMap::SC_HORIZONTAL:
 			{
 				// setting for 800 x 600 screen only!
 				camera->SetPosition(D3DXVECTOR3(0,0,-250));
@@ -423,7 +418,7 @@ void EditorRuntime::Draw(double time)
 				Draw(time, offsetX, offsetY, shipId2, &source, &dest, splitScreenType);
 				break;
 			}
-			case Runtime::SC_SINGLE:
+			case ModelMap::SC_SINGLE:
 			{
 				// setting for 800 x 600 screen only!
 				camera->SetPosition(D3DXVECTOR3(0,0,-125));
@@ -495,12 +490,9 @@ void EditorRuntime::UpdateCamera()
 
 	// read delta mouse and reset it to zero
 	D3DXVECTOR2 delta, abs;
-	// abs is the absolute mouse location
 	System::GetVec2Action(System::A_ABSMOUSE,abs.x,abs.y);
-	// delta is the change in mouse since last
 	System::GetVec2Action(System::A_DELTAMOUSE,delta.x,delta.y);
 	delta*=weight;
-
 	// clear deltas after use
 	System::SetAction(System::A_DELTAMOUSE,0,0);
 
@@ -523,7 +515,6 @@ void EditorRuntime::UpdateCamera()
 
 	delta.x = -delta.x;
 
-	// get camera's local rotation
 	const D3DXMATRIXA16& crot = camera->GetLocalRotationMatrix();
 
 	// move into the direction of the camera on x and y axis
@@ -544,23 +535,12 @@ void EditorRuntime::UpdateCamera()
 	// select an item and move it if possible
 	if (select && currentLevel != NULL)
 	{
-		// keep the selected item as long as the button is down
-		WorldObject* pick = NULL;
-		if (selectedItem == NULL)
-		{
-			pick = currentLevel->Pick(camera, abs, true);
-		}
-		else
-		{
-			pick = selectedItem;
-		}
+		WorldObject* pick = currentLevel->Pick(camera, abs, true);
 		if (pick != NULL)
 		{
-			// move the picked object along with the mouse
 			pick->Translate(-xaxis);
 			pick->Translate(-yaxis);
 
-			// change in selection?
 			if (selectedItem != pick)
 			{
 				SelectionObserver::NotifyObservers(pick);
@@ -591,11 +571,8 @@ void EditorRuntime::RebuildGameObjects()
 {
 	if (currentLevel!=NULL)
 	{
-		bases.clear();
-		ships.clear();
-		turrets.clear();
-		indestructableRegions.clear();
-		water.clear();
+		base.clear();
+		ship.clear();
 		modelMap = NULL;
 
 		std::vector<WorldObject*> objects = currentLevel->GetObjects();
@@ -609,32 +586,20 @@ void EditorRuntime::RebuildGameObjects()
 			}
 			else if (ObjectFactory::Isa(objects[i], WorldObject::TYPE_BASE))
 			{
-				bases.push_back(dynamic_cast<Base*>(objects[i]));
+				base.push_back(dynamic_cast<Base*>(objects[i]));
 			}
 			else if (ObjectFactory::Isa(objects[i], WorldObject::TYPE_SHIP))
 			{
-				ships.push_back(dynamic_cast<Ship*>(objects[i]));
-			}
-			else if (ObjectFactory::Isa(objects[i], WorldObject::TYPE_INDESTRUCTABLEREGION))
-			{
-				indestructableRegions.push_back(dynamic_cast<IndestructableRegion*>(objects[i]));
-			}
-			else if (ObjectFactory::Isa(objects[i], WorldObject::TYPE_TURRET))
-			{
-				turrets.push_back(dynamic_cast<Turret*>(objects[i]));
-			}
-			else if (ObjectFactory::Isa(objects[i], WorldObject::TYPE_WATER))
-			{
-				water.push_back(dynamic_cast<Water*>(objects[i]));
+				ship.push_back(dynamic_cast<Ship*>(objects[i]));
 			}
 		}
 	}
 
 	// setup controller for both
-	if (ships.size() > 1)
+	if (ship.size() > 1)
 	{
-		ships[0]->SetupKeyboard(0);
-		ships[1]->SetupGamePad(0);
+		ship[0]->SetupKeyboard();
+		ship[1]->SetupGamePad(0);
 	}
 }
 

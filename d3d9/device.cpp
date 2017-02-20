@@ -22,8 +22,7 @@ Device::Device(IDirect3DDevice9* _pd3dDevice)
 	: pd3dDevice(_pd3dDevice)
 	, pVertexDeclaration(NULL)
 	, pColourVertexDeclaration(NULL)
-	, smallFont(NULL)
-	, largeFont(NULL)
+	, font(NULL)
 {
 	deviceLost = false;
 
@@ -35,14 +34,12 @@ Device::Device(IDirect3DDevice9* _pd3dDevice)
 	// initialize our identity matrix;
 	D3DXMatrixIdentity(&identityMatrix);
 
-	smallFont = new Font();
-	largeFont = new Font();
+	font = new Font();
 }
 
 Device::~Device()
 {
-	safe_delete(smallFont);
-	safe_delete(largeFont);
+	safe_delete(font);
 	pd3dDevice=NULL;
 }
 
@@ -56,14 +53,9 @@ IDirect3DDevice9* Device::GetDevice()
 	return pd3dDevice;
 }
 
-Font* Device::GetSmallFont()
+Font* Device::GetFont()
 {
-	return smallFont;
-}
-
-Font* Device::GetLargeFont()
-{
-	return largeFont;
+	return font;
 }
 
 void Device::SetWidthHeightWindowed(int _width,int _height,bool _windowed)
@@ -120,7 +112,7 @@ bool Device::BeginScene()
             // Check if the device needs to be reset.
             if (hr==D3DERR_DEVICENOTRESET)
 			{
-				if (FAILED(hr = Interface::Get()->ResetDevice()))
+				if (FAILED(hr=Interface::GetI()->ResetDevice()))
 				{
                     return false;
 				}

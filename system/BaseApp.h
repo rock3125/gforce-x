@@ -6,7 +6,6 @@ class Runtime;
 class Level;
 class WorldObject;
 class SystemFacade;
-class SoundSystem;
 
 //////////////////////////////////////////////////////////
 
@@ -17,13 +16,7 @@ public:
 	virtual ~BaseApp();
 
 	// access main app
-	static BaseApp* Get();
-
-	// allow up to two keyboard mappings
-	enum
-	{
-		MAX_KEYBOARD = 2,
-	};
+	static BaseApp& GetApp();
 
 	// get client rect of window
 	const D3DXVECTOR4& GetRect();
@@ -35,12 +28,14 @@ public:
 
 	// access runtime
 	virtual Runtime* GetCurrentRuntime();
+	virtual void SetCurrentRuntime(Runtime* currentRuntime);
 
 	// access function interface
 	virtual SystemFacade* GetFacade();
 
-	bool PlayMusic();
-	void PlayMusic(bool playMusic);
+	// access current level
+	Level* GetCurrentLevel();
+	void SetCurrentLevelPtr(Level* level);
 
 	int Width()
 	{
@@ -69,65 +64,59 @@ public:
 		this->fullscreen = fullscreen;
 	}
 
-	int Left(int kbId)
+	int Left()
 	{
-		return left[kbId];
+		return left;
 	}
-	void Left(int kbId, int left)
+	void Left(int left)
 	{
-		this->left[kbId] = left;
-	}
-
-	int Right(int kbId)
-	{
-		return right[kbId];
-	}
-	void Right(int kbId, int right)
-	{
-		this->right[kbId] = right;
+		this->left = left;
 	}
 
-	int Up(int kbId)
+	int Right()
 	{
-		return up[kbId];
+		return right;
 	}
-	void Up(int kbId, int up)
+	void Right(int right)
 	{
-		this->up[kbId] = up;
-	}
-
-	int Down(int kbId)
-	{
-		return down[kbId];
-	}
-	void Down(int kbId, int down)
-	{
-		this->down[kbId] = down;
+		this->right = right;
 	}
 
-	int Fire1(int kbId)
+	int Up()
 	{
-		return fire1[kbId];
+		return up;
 	}
-	void Fire1(int kbId, int fire1)
+	void Up(int up)
 	{
-		this->fire1[kbId] = fire1;
-	}
-
-	int Fire2(int kbId)
-	{
-		return fire2[kbId];
-	}
-	void Fire2(int kbId, int fire2)
-	{
-		this->fire2[kbId] = fire2;
+		this->up = up;
 	}
 
-	// save xml settings/user preferences
-	void SaveSettings();
+	int Down()
+	{
+		return down;
+	}
+	void Down(int down)
+	{
+		this->down = down;
+	}
 
-	// load the user's settings
-	bool LoadSettings();
+	int Fire1()
+	{
+		return fire1;
+	}
+	void Fire1(int fire1)
+	{
+		this->fire1 = fire1;
+	}
+
+	int Fire2()
+	{
+		return fire2;
+	}
+	void Fire2(int fire2)
+	{
+		this->fire2 = fire2;
+	}
 
 	// services to be implemented for the editor only really - but the runtime can
 	// just choose not to implement them
@@ -144,8 +133,11 @@ public:
 	// exit system
 	virtual void Quit() = 0;
 
-	// set another resolution (& reload all)
-	void ResetResolution(bool fullscreen, int width, int height);
+	// exit current game in progress
+	virtual void QuitGame() = 0;
+
+	// load a level from file
+	virtual Level* Load(const std::string& fname) = 0;
 
 protected:
 	D3DXVECTOR4		rect;
@@ -156,31 +148,25 @@ protected:
 	// runtime accessor
 	Runtime*		currentRuntime;
 
-	// system scripting interface 
+	// current level
+	Level*			currentLevel;
+
+	// system interface
 	SystemFacade*	facade;
 
-	// application window & size
-	HWND			hWnd;
-
+	// application window size
 	int				width;
 	int				height;
 
-	// fullscreen app?
 	bool			fullscreen;
 
-	// play music?
-	bool			playMusic;
-
-	// frame timer
-	float			elapsedTime;
-
-	// basic key-boards (defineable)
-	int				left[MAX_KEYBOARD];
-	int				right[MAX_KEYBOARD];
-	int				up[MAX_KEYBOARD];
-	int				down[MAX_KEYBOARD];
-	int				fire1[MAX_KEYBOARD];
-	int				fire2[MAX_KEYBOARD];
+	// basic key-board (defineable)
+	int				left;
+	int				right;
+	int				up;
+	int				down;
+	int				fire1;
+	int				fire2;
 
 private:
 	// special case of singleton - since the main MFC app

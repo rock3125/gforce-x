@@ -163,14 +163,13 @@ void ParticleSource::SetMaxParticles(int _maxParticles)
 
 void ParticleSource::EventLogic(double time)
 {
-	float weight = time * 50.0f;
 	for (int i=0; i < maxParticles; i++)
 	{
 		float ttl = particle[i].GetTTL();
 		if (ttl > 0)
 		{
-			particle[i].SetTTL(ttl - time * 10.0f);
-			particle[i].SetPosition(particle[i].GetPosition() + particle[i].GetDirn() * weight);
+			particle[i].SetTTL(ttl - 0.1f);
+			particle[i].SetPosition(particle[i].GetPosition() + particle[i].GetDirn());
 		}
 	}
 }

@@ -7,8 +7,7 @@ class Model;
 /*
 
 obj	->			'#' eol						|
-				model*						|
-				'mtllib' ident + ['.' ident]
+				model*
 
 model	->		['v' f f f]*
 				['vt' f f]*
@@ -46,8 +45,6 @@ public:
 	// parse an object after it has been loaded
 	// by Load() in the base class
 	WorldObject* ParseLoadedFile();
-	// not supported - but needs to be implemented
-	WorldObject* LoadBinary(std::string filename);
 
 private:
 	// parser a material (and set my local material list)

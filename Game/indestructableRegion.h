@@ -38,14 +38,8 @@ public:
 	void UpdateBoundingBox();
 
 	// save and load region
-	virtual void Read(XmlNode* node);
-	virtual XmlNode* Write();
-
-	// return the signature of this object
-	virtual std::string Signature()
-	{
-		return irSignature;
-	}
+	virtual void Read(BaseStreamer&);
+	virtual void Write(BaseStreamer&);
 
 private:
 

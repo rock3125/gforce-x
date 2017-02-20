@@ -50,14 +50,8 @@ public:
 	void Update();
 
 	// save and load a skin
-	virtual void Read(XmlNode* node);
-	virtual XmlNode* Write();
-
-	// return the signature of this object
-	virtual std::string Signature()
-	{
-		return skinSignature;
-	}
+	virtual void Read(BaseStreamer&);
+	virtual void Write(BaseStreamer&);
 
 private:
 	// given a set of bones with animations and an animation id

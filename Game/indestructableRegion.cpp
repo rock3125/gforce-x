@@ -92,24 +92,23 @@ void IndestructableRegion::UpdateBoundingBox()
 	bb->SetMax(pos);
 }
 
-void IndestructableRegion::Read(XmlNode* node)
+void IndestructableRegion::Read(BaseStreamer& _f)
 {
-	XmlNode::CheckVersion(node, irSignature, irVersion);
-	WorldObject::Read(node->GetChild(WorldObject::Signature()));
+	BaseStreamer& f = _f.GetChild(irSignature,irVersion);
+	WorldObject::Read(f);
 
-	node->Read("width", width);
-	node->Read("height", height);
+	f.Read("width", width);
+	f.Read("height", height);
 
 	UpdateBoundingBox();
 }
 
-XmlNode* IndestructableRegion::Write()
+void IndestructableRegion::Write(BaseStreamer& _f)
 {
-	XmlNode* node = XmlNode::NewChild(irSignature, irVersion);
-	node->Add(WorldObject::Write());
+	BaseStreamer& f = _f.NewChild(irSignature,irVersion);
+	WorldObject::Write(f);
 
-	node->Write("width", width);
-	node->Write("height", height);
-	return node;
+	f.Write("width", width);
+	f.Write("height", height);
 }
 

@@ -69,12 +69,12 @@ private:
 	std::vector<MenuLevel*>	level;
 
 	// flashing menu item
-	double blinkTime;
+	float blinkTime;
 	bool blinking;
 	int lastAction;
 
 	// blink speed
-	double BLINK_INTERVAL;
+	static float BLINK_INTERVAL;
 
 	D3DXCOLOR colour1;
 	D3DXCOLOR colour2;

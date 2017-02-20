@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9dt.lib dxguid.lib dinput8.lib dinput.lib d3d9.lib strmiids.lib winmm.lib dsound.lib wsock32.lib"
+				AdditionalDependencies="d3dx9dt.lib dxguid.lib dinput8.lib dinput.lib d3d9.lib strmiids.lib winmm.lib dsound.lib"
 				LinkIncremental="2"
 				IgnoreDefaultLibraryNames="libcp.lib"
 				GenerateDebugInformation="true"
@@ -120,13 +120,12 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				UseUnicodeResponseFiles="false"
 				AdditionalIncludeDirectories="..;."
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="2"
-				Detect64BitPortabilityProblems="false"
+				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -140,8 +139,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="d3dx9dt.lib dxguid.lib dinput8.lib dinput.lib d3d9.lib strmiids.lib winmm.lib dsound.lib wsock32.lib"
-				OutputFile="$(ProjectName).exe"
+				AdditionalDependencies="d3dx9dt.lib dxguid.lib dinput8.lib dinput.lib d3d9.lib strmiids.lib winmm.lib dsound.lib"
 				LinkIncremental="1"
 				IgnoreDefaultLibraryNames="libcp.lib"
 				GenerateDebugInformation="true"
@@ -304,49 +302,51 @@
 				Name="levels"
 				>
 				<File
-					RelativePath=".\data\levels\icon1.jpg"
-					DeploymentContent="true"
-					>
-				</File>
-				<File
-					RelativePath=".\data\levels\icon2.jpg"
-					DeploymentContent="true"
-					>
-				</File>
-				<File
-					RelativePath=".\data\levels\level1.bmp"
-					DeploymentContent="true"
-					>
-				</File>
-				<File
-					RelativePath=".\data\levels\level1.xml"
-					DeploymentContent="true"
-					>
-				</File>
-				<File
-					RelativePath=".\data\levels\level2.bmp"
-					DeploymentContent="true"
-					>
-				</File>
-				<File
-					RelativePath=".\data\levels\level2.xml"
-					DeploymentContent="true"
-					>
-				</File>
-				<File
 					RelativePath=".\data\levels\levels.xml"
 					DeploymentContent="true"
-					FileType="25"
 					>
 				</File>
 				<Filter
-					Name="textures"
+					Name="level1"
 					>
 					<File
-						RelativePath=".\data\levels\textures\linedtiles.jpg"
+						RelativePath=".\data\levels\level1\icon.jpg"
 						DeploymentContent="true"
 						>
 					</File>
+					<File
+						RelativePath=".\data\levels\level1\level1.bmp"
+						DeploymentContent="true"
+						>
+					</File>
+					<File
+						RelativePath=".\data\levels\level1\level1.xml"
+						DeploymentContent="true"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="level2"
+					>
+					<File
+						RelativePath=".\data\levels\level2\icon.jpg"
+						DeploymentContent="true"
+						>
+					</File>
+					<File
+						RelativePath=".\data\levels\level2\level2.bmp"
+						DeploymentContent="true"
+						>
+					</File>
+					<File
+						RelativePath=".\data\levels\level2\level2.xml"
+						DeploymentContent="true"
+						>
+					</File>
+				</Filter>
+				<Filter
+					Name="textures"
+					>
 					<File
 						RelativePath=".\data\levels\textures\sandwave.jpg"
 						DeploymentContent="true"
@@ -363,12 +363,57 @@
 				Name="menu"
 				>
 				<File
+					RelativePath=".\data\menu\About.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\AboutLine1.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\AboutLine2.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\AboutMenu.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
 					RelativePath=".\data\menu\bg1.jpg"
 					DeploymentContent="true"
 					>
 				</File>
 				<File
-					RelativePath=".\data\menu\controllerbg.jpg"
+					RelativePath=".\data\menu\blank.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\Controls.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\ControlsMenu.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\FirstOutOfFive.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\FirstOutOfTen.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\FourPlayerGame.tga"
 					DeploymentContent="true"
 					>
 				</File>
@@ -393,12 +438,22 @@
 					>
 				</File>
 				<File
-					RelativePath=".\data\menu\Keyboard0.tga"
+					RelativePath=".\data\menu\GameTypeMenu.tga"
 					DeploymentContent="true"
 					>
 				</File>
 				<File
-					RelativePath=".\data\menu\Keyboard1.tga"
+					RelativePath=".\data\menu\GravityForceX.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\Keyboard.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\MainMenu.tga"
 					DeploymentContent="true"
 					>
 				</File>
@@ -408,7 +463,122 @@
 					>
 				</File>
 				<File
-					RelativePath=".\data\menu\networkbg.jpg"
+					RelativePath=".\data\menu\NetworkGame.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\NetworkGameMenu.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\Player1.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\Player1ShipMenu.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\Player2.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\Player2ShipMenu.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\Player3.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\Player3ShipMenu.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\Player4.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\Player4ShipMenu.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\Quit.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\return.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\SelectFourPlayerLevel.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\SelectTwoPlayerHorizontal.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\SelectTwoPlayerVertical.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\SinglePlayer.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\SinglePlayerMenu.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\SplitScreen.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\SplitScreenMenu.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\TeamFirstOutOfFive.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\TeamFirstOutOfTen.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\todo.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\TwoPlayerHorizontal.tga"
+					DeploymentContent="true"
+					>
+				</File>
+				<File
+					RelativePath=".\data\menu\TwoPlayerVertical.tga"
 					DeploymentContent="true"
 					>
 				</File>
@@ -437,12 +607,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\data\objects\Neuropol24.fnt"
-					DeploymentContent="true"
-					>
-				</File>
-				<File
-					RelativePath=".\data\objects\Neuropol28.fnt"
+					RelativePath=".\data\objects\Neuropol10.fnt"
 					DeploymentContent="true"
 					>
 				</File>
@@ -463,11 +628,6 @@
 				</File>
 				<File
 					RelativePath=".\data\objects\spaceship.wrl"
-					DeploymentContent="true"
-					>
-				</File>
-				<File
-					RelativePath=".\data\objects\sphere.wrl"
 					DeploymentContent="true"
 					>
 				</File>
@@ -517,50 +677,6 @@
 				</File>
 				<File
 					RelativePath=".\data\ships\ships.xml"
-					DeploymentContent="true"
-					FileType="25"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="sounds"
-				>
-				<File
-					RelativePath=".\data\sounds\drop.wav"
-					DeploymentContent="true"
-					>
-				</File>
-				<File
-					RelativePath=".\data\sounds\engine.wav"
-					DeploymentContent="true"
-					>
-				</File>
-				<File
-					RelativePath=".\data\sounds\explosion.wav"
-					DeploymentContent="true"
-					>
-				</File>
-				<File
-					RelativePath=".\data\sounds\fire.wav"
-					DeploymentContent="true"
-					>
-				</File>
-				<File
-					RelativePath=".\data\sounds\land.wav"
-					DeploymentContent="true"
-					>
-				</File>
-				<File
-					RelativePath=".\data\sounds\missile.wav"
-					DeploymentContent="true"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="music"
-				>
-				<File
-					RelativePath=".\data\music\GravityForce.mp3"
 					DeploymentContent="true"
 					>
 				</File>
@@ -626,10 +742,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\Game\NetworkPlayer.h"
-				>
-			</File>
-			<File
 				RelativePath=".\Game\shield.cpp"
 				>
 			</File>
@@ -643,30 +755,6 @@
 			</File>
 			<File
 				RelativePath=".\Game\ship.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Game\shipData.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Game\shipData.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Game\Turret.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Game\Turret.h"
-				>
-			</File>
-			<File
-				RelativePath=".\Game\Water.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\Game\Water.h"
 				>
 			</File>
 		</Filter>
@@ -714,6 +802,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Menu\menuShip.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\Menu\menuShip.h"
+				>
+			</File>
+			<File
 				RelativePath=".\Menu\menuShipManager.cpp"
 				>
 			</File>
@@ -751,6 +847,14 @@
 			</File>
 			<File
 				RelativePath=".\system\BaseApp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\system\cpuid.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\system\cpuid.h"
 				>
 			</File>
 			<File
@@ -941,18 +1045,6 @@
 					</File>
 					<File
 						RelativePath=".\system\converters\x\x.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="lwo"
-					>
-					<File
-						RelativePath=".\system\converters\lwo\lwoImport.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\system\converters\lwo\lwoImport.h"
 						>
 					</File>
 				</Filter>
@@ -1241,139 +1333,13 @@
 					>
 				</File>
 			</Filter>
-			<Filter
-				Name="sound"
-				>
-				<File
-					RelativePath=".\system\sound\cwavefile.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\sound\cwavefile.h"
-					>
-				</File>
-				<File
-					RelativePath=".\system\sound\sample.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\sound\sample.h"
-					>
-				</File>
-				<File
-					RelativePath=".\system\sound\soundSystem.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\sound\soundSystem.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="network"
-				>
-				<File
-					RelativePath=".\system\Network\basePacket.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\basePacket.h"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\baseProtocolPackets.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\baseProtocolPackets.h"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\dataPacket.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\dataPacket.h"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\DiscoveryItem.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\DiscoveryItem.h"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\NetworkClient.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\NetworkClient.h"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\NetworkId.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\NetworkId.h"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\networking.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\networking.h"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\NetworkServer.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\NetworkServer.h"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\packetObserver.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\packetObserver.h"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\ProtocolHandler.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\system\Network\ProtocolHandler.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
-		<File
-			RelativePath=".\editorsettings.xml"
-			DeploymentContent="true"
-			>
-		</File>
-		<File
-			RelativePath=".\gamesettings.xml"
-			DeploymentContent="true"
-			>
-		</File>
 		<File
 			RelativePath=".\GF10App.cpp"
 			>
 		</File>
 		<File
 			RelativePath=".\GF10App.h"
-			>
-		</File>
-		<File
-			RelativePath=".\GravityForceX.ico"
 			>
 		</File>
 		<File
@@ -1385,11 +1351,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\standardFirst.h"
+			RelativePath=".\settings.xml"
 			>
 		</File>
 		<File
-			RelativePath=".\start reflector.bat"
+			RelativePath=".\standardFirst.h"
 			>
 		</File>
 		<File

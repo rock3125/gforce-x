@@ -61,14 +61,8 @@ public:
 	void CalculateMatrices(float width,float height);
 
 	// save and load camera
-	void Read(XmlNode*);
-	XmlNode* Write();
-
-	// return the signature of this object
-	virtual std::string Signature()
-	{
-		return cameraSignature;
-	}
+	void Read(BaseStreamer&);
+	void Write(BaseStreamer&);
 
 protected:
 	float			zoom;

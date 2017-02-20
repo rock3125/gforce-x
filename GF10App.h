@@ -25,7 +25,6 @@ class GF10App : public BaseApp
 	GF10App();
 	~GF10App();
 public:
-
 	// access singleton
 	static GF10App* Get();
 
@@ -38,21 +37,29 @@ public:
 	// called by system when window has been created
 	bool Initialise(HWND hWnd);
 
-	// show windows based error message
-	void ShowErrorMessage(std::string msg,std::string title);
+	// load a level from file
+	Level* Load(const std::string& fname);
+
+	// environments need to be able to set the active player
+	void SetActivePlayer(int shipId);
 
 	// handle keyboard messages
-	void OnKeyDown(int kchar, int flags);
-	void OnKeyUp(int kchar, int flags);
-	void OnKeyPress(int kchar, int flags);
+	void OnKeyDown(int kchar,int flags);
+	void OnKeyUp(int kchar,int flags);
 
 	// exit program
 	void Quit();
+
+	// exit current game in progress and return to menu
+	void QuitGame();
 
 protected:
 	std::string GetFilenameForLoad(const std::string& filter, const std::string& extn, const std::string& directory);
 	std::string GetFilenameForSave(const std::string& filter, const std::string& extn, const std::string& directory);
 	bool ColourPicker(const D3DXCOLOR& in, D3DXCOLOR& out);
+
+	// show an error message system wide
+	void ShowErrorMessage(std::string msg, std::string title);
 
 	// pump message queue
 	void ForceProcessMessages();
@@ -77,18 +84,18 @@ private:
 
 	// Global Variables:
 	HINSTANCE	hInstance;
+	HWND		hWnd;
 	TCHAR		szTitle[MAX_LOADSTRING];
 	TCHAR		szWindowClass[MAX_LOADSTRING];
 
 	// runtime of system
-	GF10Runtime* runtime;
-
+	GF10Runtime	runtime;
+	
 	// file log device
 	FileLog*	fileLog;
 
-	// logic speed
-	double logicFrameTime;
-	double LOGIC_FRAME_RATE;
+	// menu system
+	MenuManager*	menuManager;
 
 	static GF10App* singleton;
 };

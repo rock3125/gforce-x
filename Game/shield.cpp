@@ -29,8 +29,8 @@ Shield::~Shield()
 
 void Shield::EventLogic(double time)
 {
-	xa += (5.0f * time);
-	ya += (330.0f * time);
+	xa += 0.5f;
+	ya += 33;
 }
 
 void Shield::Draw(double time)

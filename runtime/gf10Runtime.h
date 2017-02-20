@@ -25,11 +25,23 @@ public:
 	GF10Runtime();
 	virtual ~GF10Runtime();
 
+	// overwritten to catch level changes
+	virtual void SetCurrentLevel(Level* currentLevel);
+
 	// set selected item
 	void SetSelectedItem(WorldObject* selectedItem);
 
+	// set split screen type
+	void SetSplitScreenType(int splitScreenType);
+
 	// implement update and render
 	virtual void Draw(double time);
+
+	// access the renderer camera
+	Camera* GetCamera();
+
+	// set camera values
+	void SetCamera(const Camera& _camera);
 
 	// initialise renderer systems
 	virtual void Initialise();
@@ -65,14 +77,16 @@ protected:
 	// returns true if ready
 	bool SetupSceneForRendering();
 
+	// rebuild game objects
+	void RebuildGameObjects();
+
+	// clear current level
+	void ClearCurrentLevel();
+
 protected:
 	// draw single player view according to split screen type
 	void Draw(double time, float displayOffX, float displayOffY, int shipId, 
 			  RECT* source, RECT* dest, int splitScreenType);
-
-	// draw for two players on one screen (new experimental)
-	void DrawMixed(double time, float offsetX, float offsetY1, float offsetY2, 
-		float posx, float posy, RECT* source, RECT* dest, int splitScreenType);
 
 	// draw original way
 	void DrawNormal(double time);
@@ -81,12 +95,30 @@ private:
 	D3DXCOLOR				backgroundColour;
 	D3DXCOLOR				lightColour;
 	D3DXCOLOR				darkColour;
-	D3DXCOLOR				white;
+
+	int						splitScreenType;
 
 	bool					wireframe;
 	bool					cullCCW;
 
+	Camera*					camera;
+
 	// selected item pointer
 	WorldObject*			selectedItem;
+
+	enum
+	{
+		ACT_NONE,
+		ACT_ASKING,
+		ACT_REPLY,
+		ACT_QUIT,
+		ACT_CONTINUE
+	};
+
+	// ask person to quit or not
+	Input::Event* escape;
+	Input::Event* cont;
+
+	int activity;
 };
 

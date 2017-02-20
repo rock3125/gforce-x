@@ -31,8 +31,7 @@ Keyboard::~Keyboard()
 
 void Keyboard::Initialise()
 {
-	lastKeyPressed = 0;
-	for (int i = 0; i < NUM_KEYS; i++)
+	for (int i=0; i < NUM_KEYS; i++)
 	{
 		keyboard[i] = false;
 	}
@@ -42,27 +41,15 @@ void Keyboard::Initialise()
 
 void Keyboard::KeyDown(int key)
 {
-	if (key >= 0 && key < NUM_KEYS)
+	if (key < NUM_KEYS)
 	{
 		keyboard[key] = true;
 	}
 }
 
-void Keyboard::KeyPress(int key)
-{
-	lastKeyPressed = key;
-}
-
-int Keyboard::KeyPress()
-{
-	int key = lastKeyPressed;
-	lastKeyPressed = 0;
-	return key;
-}
-
 void Keyboard::KeyUp(int key)
 {
-	if (key >= 0 && key < NUM_KEYS)
+	if (key < NUM_KEYS)
 	{
 		keyboard[key] = false;
 	}
@@ -70,19 +57,12 @@ void Keyboard::KeyUp(int key)
 
 bool Keyboard::GetKeyDown(int key)
 {
-	if (key >= 0 && key < NUM_KEYS)
-	{
-		return keyboard[key];
-	}
-	return false;
+	return keyboard[key];
 }
 
 void Keyboard::SetKeyDown(int key, bool value)
 {
-	if (key >= 0 && key < NUM_KEYS)
-	{
-		keyboard[key] = value;
-	}
+	keyboard[key] = value;
 }
 
 bool Keyboard::GetShiftDown()

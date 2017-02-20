@@ -61,9 +61,6 @@ bool XmlParser::LoadAndParse(const std::string& fname)
 	{
 		root = Xml();
 	}
-	else
-	{
-	}
 	return !error;
 }
 

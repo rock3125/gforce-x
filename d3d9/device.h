@@ -39,8 +39,7 @@ public:
 	IDirect3DDevice9* GetDevice();
 
 	// get main app font
-	virtual Font* GetSmallFont();
-	virtual Font* GetLargeFont();
+	virtual Font* GetFont();
 
 	// lighting
 	void SetLight(int index, const D3DLIGHT9& pLight);
@@ -130,8 +129,7 @@ protected:
 	bool			windowed;
 
 	// system main font
-	Font*			smallFont;
-	Font*			largeFont;
+	Font*			font;
 
 	// device (owned by interface)
 	IDirect3DDevice9*				pd3dDevice;

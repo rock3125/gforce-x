@@ -66,8 +66,6 @@ public:
 
 	// VRML grammar - header
 	WorldObject* ParseLoadedFile();
-	// not supported - but needs to be implemented
-	WorldObject* LoadBinary(std::string filename);
 
 protected:
 	// a vrml shape

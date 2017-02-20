@@ -53,8 +53,6 @@ public:
 
 	// convert parsed file to a skin
 	WorldObject* ParseLoadedFile();
-	// not supported - but needs to be implemented
-	WorldObject* LoadBinary(std::string filename);
 
 private:
 	// data structures internal to x file parser

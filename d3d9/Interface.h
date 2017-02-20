@@ -27,9 +27,10 @@ public:
 	static Device* GetDevice();
 
 	// only to be used by device and app
-	static Interface* Get();
+	static Interface* GetI();
 
 	// remove interface when finished
+	static void Create();
 	static void Destroy();
 
 	// initialise main window

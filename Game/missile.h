@@ -24,12 +24,8 @@ public:
 	Missile(const Missile&);
 	const Missile& operator=(const Missile&);
 
-	// set the values for the missile's behaviour
-	void SetData(float acceleration, float fuel, float fuelusage, float maxspeed, float strength, float force);
-
 	// is the missile in use?
 	bool GetInUse();
-	void SetInUse(bool inUse);
 
 	// is the missile exploding?
 	bool GetExploding();
@@ -87,13 +83,13 @@ private:
 	ParticleSource*	explosion;
 
 	// consts
-	float MAX_SPEED;
-	float INIT_ACCEL;
-	float INIT_FUEL;
-	float FUEL_USAGE;
-	float ANGULAR_SPEED;
-	float LENGTH;
-	float INFLUENCE_RANGE;
-	float MISSILE_FORCE;
+	static float MAX_SPEED;
+	static float INIT_ACCEL;
+	static float INIT_FUEL;
+	static float FUEL_USAGE;
+	static float ANGULAR_SPEED;
+	static float LENGTH;
+	static float INFLUENCE_RANGE;
+	static float MISSILE_FORCE;
 };
 

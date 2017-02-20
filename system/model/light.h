@@ -63,17 +63,11 @@ public:
 	void SetTheta(float theta);
 
 	// save and load light
-	void Read(XmlNode* node);
-	XmlNode* Write();
+	void Read(BaseStreamer&);
+	void Write(BaseStreamer&);
 
 	// update d3d light with settings supplied
 	void Update();
-
-	// return the signature of this object
-	virtual std::string Signature()
-	{
-		return lightSignature;
-	}
 
 private:
 	D3DLIGHT9		light;

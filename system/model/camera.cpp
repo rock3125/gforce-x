@@ -3,7 +3,7 @@
 #include "system/model/camera.h"
 #include "d3d9/interface.h"
 
-std::string Camera::cameraSignature = "camera";
+std::string Camera::cameraSignature="camera";
 int Camera::cameraVersion = 1;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -232,44 +232,43 @@ void  Camera::SetViewingAngle(float _viewingAngle)
 	viewingAngle = _viewingAngle;
 }
 
-XmlNode* Camera::Write()
+void Camera::Write(BaseStreamer& _f)
 {
-	XmlNode* node = XmlNode::NewChild(cameraSignature, cameraVersion);
+	BaseStreamer& f = _f.NewChild(cameraSignature,cameraVersion);
 
-	node->Add(WorldObject::Write());
+	WorldObject::Write(f);
 
-	node->Write("zoom", zoom);
-	node->Write("initialXAngle", initialXAngle);
-	node->Write("initialYAngle", initialYAngle);
-	node->Write("initialZoom", initialZoom);
-	node->Write("viewingDistance", viewingDistance);
-	node->Write("viewingAngle", viewingAngle);
-	node->Write("radius", radius);
+	f.Write("zoom", zoom);
+	f.Write("initialXAngle", initialXAngle);
+	f.Write("initialYAngle", initialYAngle);
+	f.Write("initialZoom", initialZoom);
+	f.Write("viewingDistance", viewingDistance);
+	f.Write("viewingAngle", viewingAngle);
+	f.Write("radius", radius);
 
-	int type = (int)cameraType;
-	node->Write("type",type);
-	return node;
+	int type=int(cameraType);
+	f.Write("type",type);
 }
 
-void Camera::Read(XmlNode* node)
+void Camera::Read(BaseStreamer& _f)
 {
-	XmlNode::CheckVersion(node, cameraSignature, cameraVersion);
+	BaseStreamer& f = _f.GetChild(cameraSignature,cameraVersion);
 
-	WorldObject::Read(node->GetChild(WorldObject::Signature()));
+	WorldObject::Read(f);
 
-	node->Read("zoom",zoom);
-	node->Read("initialXAngle", initialXAngle);
-	node->Read("initialYAngle", initialYAngle);
-	node->Read("initialZoom", initialZoom);
-	node->Read("viewingDistance", viewingDistance);
-	node->Read("viewingAngle", viewingAngle);
-	node->Read("radius", radius);
+	f.Read("zoom",zoom);
+	f.Read("initialXAngle", initialXAngle);
+	f.Read("initialYAngle", initialYAngle);
+	f.Read("initialZoom", initialZoom);
+	f.Read("viewingDistance", viewingDistance);
+	f.Read("viewingAngle", viewingAngle);
+	f.Read("radius", radius);
 
 	int type;
-	node->Read("type",type);
-	cameraType = (CameraType)type;
+	f.Read("type",type);
+	cameraType=CameraType(type);
 
-	Device* dev = Interface::GetDevice();
+	Device* dev=Interface::GetDevice();
 	if (dev!=NULL)
 	{
 		Activate();

@@ -39,6 +39,7 @@ public:
 
 	// get texture
 	Texture* GetBackgroundTexture();
+	Texture* GetNameTexture();
 
 private:
 	int id;
@@ -46,6 +47,7 @@ private:
 	std::string background;
 
 	Texture*	backgroundTexture;
+	Texture*	nameTexture;
 
 	std::vector<MenuItem*> item;
 };

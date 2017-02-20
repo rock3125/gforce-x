@@ -4,7 +4,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-class XmlNode
+class XmlNode : public BaseStreamer
 {
 	XmlNode(const XmlNode&);
 	const XmlNode& operator=(const XmlNode&);
@@ -19,15 +19,9 @@ public:
 
 	// create a new child and return a pointer to it and add it to
 	// my list of children
-	static XmlNode* NewChild(const std::string& tag, int version);
-	virtual XmlNode* GetChild(const std::string& tag, int version);
-	virtual XmlNode* GetChild(const std::string& tag);
-	virtual bool HasChild(const std::string& tag);
-	// add a new child
-	virtual void Add(XmlNode* node);
-
-	// check the version number of an xml node (must be a versioned node)
-	static void CheckVersion(XmlNode* node, std::string tag, int versionNumber);
+	virtual BaseStreamer& NewChild(const std::string& tag,int version);
+	virtual BaseStreamer& GetChild(const std::string& tag,int version);
+	virtual BaseStreamer& GetChild(const std::string& tag);
 
 	// access all children
 	std::vector<XmlNode*> GetChildren();

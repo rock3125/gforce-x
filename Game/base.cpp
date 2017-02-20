@@ -95,19 +95,19 @@ BoundingBox* Base::GetBoundingBox()
 	return NULL;
 }
 
-void Base::Read(XmlNode* node)
+void Base::Read(BaseStreamer& _f)
 {
-	XmlNode::CheckVersion(node, baseSignature, baseVersion);
-	WorldObject::Read(node->GetChild(WorldObject::Signature()));
-	model->Read(node->GetChild(model->Signature()));
+	BaseStreamer& f = _f.GetChild(baseSignature,baseVersion);
+	WorldObject::Read(f);
+	model->Read(f);
+
 	UpdateBoundingBox();
 }
 
-XmlNode* Base::Write()
+void Base::Write(BaseStreamer& _f)
 {
-	XmlNode* node = XmlNode::NewChild(baseSignature, baseVersion);
-	node->Add(WorldObject::Write());
-	node->Add(model->Write());
-	return node;
+	BaseStreamer& f = _f.NewChild(baseSignature,baseVersion);
+	WorldObject::Write(f);
+	model->Write(f);
 }
 

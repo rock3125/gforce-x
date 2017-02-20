@@ -39,11 +39,6 @@ BVH::~BVH()
 {
 }
 
-WorldObject* BVH::LoadBinary(std::string filename)
-{
-	throw new Exception("load binary not implemented");
-}
-
 WorldObject* BVH::ParseLoadedFile()
 {
 	if (!error)

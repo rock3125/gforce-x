@@ -148,7 +148,7 @@ bool Interpreter::ExecuteFunction(WorldObject* obj,
 			params.push_back(r);
 		}
 
-		SystemFacade* facade = BaseApp::Get()->GetFacade();
+		SystemFacade* facade = BaseApp::GetApp().GetFacade();
 		if (facade==NULL)
 		{
 			throw new Exception("facade does not exist");

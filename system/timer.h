@@ -8,7 +8,7 @@ class Time
 	~Time();
 public:
 	// get singleton instance
-	static Time* Get();
+	static Time& GetTimer();
 	static void Destroy();
 
 	void Initialise();

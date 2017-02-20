@@ -399,40 +399,39 @@ bool PRS::HasChild(PRS* child) const
 	return false;
 }
 
-XmlNode* PRS::Write()
+void PRS::Write(BaseStreamer& _f)
 {
-	XmlNode* node = XmlNode::NewChild(prsSignature, prsVersion);
+	BaseStreamer& f = _f.NewChild(prsSignature,prsVersion);
 
-	node->Add(Object::Write());
+	Object::Write(f);
 
-	node->Write("localPosition",localPosition);
-	node->Write("localRotation",localRotation);
-	node->Write("localScale",localScale);
+	f.Write("localPosition",localPosition);
+	f.Write("localRotation",localRotation);
+	f.Write("localScale",localScale);
 
 	// save parent oid
-	parentOid = System::GetInvalidOid();
-	if (parent != NULL)
-		parentOid = parent->GetOid();
+	parentOid=System::GetInvalidOid();
+	if (parent!=NULL)
+		parentOid=parent->GetOid();
 
-	node->Write("parentOid",parentOid);
-	return node;
+	f.Write("parentOid",parentOid);
 }
 
-void PRS::Read(XmlNode* node)
+void PRS::Read(BaseStreamer& _f)
 {
-	XmlNode::CheckVersion(node, prsSignature, prsVersion);
+	BaseStreamer& f = _f.GetChild(prsSignature,prsVersion);
 
-	Object::Read(node->GetChild(Object::Signature()));
+	Object::Read(f);
 
 	// remove all my existing children
 	ClearAndDeleteChildren();
 
-	node->Read("localPosition", localPosition);
-	node->Read("localRotation", localRotation);
-	node->Read("localScale", localScale);
+	f.Read("localPosition",localPosition);
+	f.Read("localRotation",localRotation);
+	f.Read("localScale",localScale);
 
 	// get ready to attach myself to my proper parent
-	node->Read("parentOid", parentOid);
+	f.Read("parentOid",parentOid);
 
 	// make sure I get calculated when needed
 	OutOfDate();

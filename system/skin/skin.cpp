@@ -401,35 +401,35 @@ void Skin::Draw()
 	}
 }
 
-XmlNode* Skin::Write()
+void Skin::Write(BaseStreamer& _f)
 {
-	XmlNode* node = XmlNode::NewChild(skinSignature, skinVersion);
+	BaseStreamer& f = _f.NewChild(skinSignature,skinVersion);
 
-	node->Add(WorldObject::Write());
+	WorldObject::Write(f);
 
-	node->Write("colour",colour);
+	f.Write("colour",colour);
 
 	bool hasBones = (rootBone != NULL);
-	node->Write("hasBones", hasBones);
+	f.Write("hasBones", hasBones);
 	if (hasBones)
 	{
-//		rootBone->Write(f);
+		rootBone->Write(f);
 	}
 
-	node->Write("numVertexInfluences", numVertexInfluences);
+	f.Write("numVertexInfluences",numVertexInfluences);
 	if (numVertexInfluences > 0)
 	{
 		for (int i=0; i < numVertexInfluences; i++)
 		{
-//			vertexInfluences[i].Write(i,f);
+			vertexInfluences[i].Write(i,f);
 		}
 	}
 
 	bool hasSkin = (skin != NULL);
-	node->Write("hasSkin", hasSkin);
+	f.Write("hasSkin", hasSkin);
 	if (hasSkin)
 	{
-//		skin->Write(f);
+		skin->Write(f);
 	}
 
 	std::string textureFilename;
@@ -437,30 +437,27 @@ XmlNode* Skin::Write()
 	{
 		textureFilename = texture->GetFilename();
 	}
-	node->Write("textureFilename", textureFilename);
-
-	return node;
+	f.Write("textureFilename", textureFilename);
 }
 
-void Skin::Read(XmlNode* node)
+void Skin::Read(BaseStreamer& _f)
 {
-	XmlNode::CheckVersion(node, skinSignature, skinVersion);
+	BaseStreamer& f = _f.GetChild(skinSignature,skinVersion);
 
-	WorldObject::Read(node->GetChild(WorldObject::Signature()));
+	WorldObject::Read(f);
 
-	node->Read("colour",colour);
+	f.Read("colour",colour);
 
-/*
 	safe_delete(rootBone);
 	bool hasBones;
-	node->Read("hasBones", hasBones);
+	f.Read("hasBones", hasBones);
 	if (hasBones)
 	{
 		rootBone = new Bone();
 		rootBone->Read(f);
 	}
 
-	node->Read("numVertexInfluences",numVertexInfluences);
+	f.Read("numVertexInfluences",numVertexInfluences);
 	if (numVertexInfluences > 0)
 	{
 		safe_delete_array(vertexInfluences);
@@ -472,17 +469,16 @@ void Skin::Read(XmlNode* node)
 	}
 
 	bool hasSkin;
-	node->Read("hasSkin", hasSkin);
+	f.Read("hasSkin", hasSkin);
 	if (hasSkin)
 	{
 		safe_delete(skin);
 		skin = new Mesh();
 		skin->Read(f);
 	}
-*/
 
 	std::string textureFilename;
-	node->Read("textureFilename", textureFilename);
+	f.Read("textureFilename", textureFilename);
 	if (!textureFilename.empty())
 	{
 		texture = TextureCache::GetTexture(textureFilename);

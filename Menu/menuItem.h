@@ -35,15 +35,6 @@ public:
 	bool GetShowInputs();
 	void SetShowInputs(bool showInputs);
 
-	bool ControlMusic();
-	void ControlMusic(bool controlMusic);
-
-	bool ControlFullscreen();
-	void ControlFullscreen(bool controlFullscreen);
-
-	bool ControlResolution();
-	void ControlResolution(bool controlResolution);
-
 	int GetNumPlayers();
 	void SetNumPlayers(int numPlayers);
 
@@ -53,21 +44,18 @@ public:
 	int GetInputId();
 	void SetInputId(int inputId);
 
-	const std::string& UserText();
-	void UserText(const std::string& action);
+	Texture* GetNameTexture();
 
 private:
 	std::string	name;
 	std::string action;
-	std::string usertext;
 	bool showLevels;
 	int numPlayers;
 	int player;
 	int inputId;
 	bool showShips;
 	bool showInputs;
-	bool controlMusic;
-	bool controlFullscreen;
-	bool controlResolution;
+
+	Texture* nameTexture;
 };
 

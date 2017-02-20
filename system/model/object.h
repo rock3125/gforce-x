@@ -30,8 +30,6 @@ public:
 		OT_SHIP,
 		OT_BASE,
 		OT_INDESTRUCTABLEREGION,
-		OT_TURRET,
-		OT_WATER,
 
 		// for now - thats the number of maximum types
 		OT_LAST = 32
@@ -52,14 +50,8 @@ public:
 	bool Isa(ObjectType otype);
 
 	// save and load object
-	virtual XmlNode* Write();
-	virtual void Read(XmlNode* node);
-
-	// return the signature of this object
-	virtual std::string Signature()
-	{
-		return objectSignature;
-	}
+	virtual void Write(BaseStreamer&);
+	virtual void Read(BaseStreamer&);
 
 private:
 	// all objects have a type set

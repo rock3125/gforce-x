@@ -257,46 +257,43 @@ void Model::Draw(double time, const D3DXVECTOR3& pos)
 	dev->RenderMesh(mesh,matrix);
 }
 
-XmlNode* Model::Write()
+void Model::Read(BaseStreamer& _f)
 {
-	XmlNode* node = XmlNode::NewChild(modelSignature, modelVersion);
+	BaseStreamer& f = _f.GetChild(modelSignature,modelVersion);
 
-	node->Add(WorldObject::Write());
-
-	node->Add(mesh->Write());
-
-	std::string textureFilename;
-	if (texture != NULL)
-	{
-		textureFilename = texture->GetFilename();
-	}
-	node->Write("texture", textureFilename);
-	node->Write("colour",colour);
-
-	return node;
-}
-
-void Model::Read(XmlNode* node)
-{
-	XmlNode::CheckVersion(node, modelSignature, modelVersion);
-
-	WorldObject::Read(node->GetChild(WorldObject::Signature()));
+	WorldObject::Read(f);
 
 	safe_delete(mesh);
 	texture = NULL;
 
-	mesh = new Mesh();
-	mesh->Read(node->GetChild(Mesh::Signature()));
+	mesh=new Mesh();
+	mesh->Read(f);
 
 	std::string textureFilename;
-	node->Read("texture", textureFilename);
+	f.Read("texture", textureFilename);
 	if (!textureFilename.empty())
 	{
 		texture = TextureCache::GetTexture(textureFilename);
 	}
 
-	node->Read("colour",colour);
+	f.Read("colour",colour);
 
 	UpdateBoundingBox();
+}
+
+void Model::Write(BaseStreamer& _f)
+{
+	BaseStreamer& f = _f.NewChild(modelSignature,modelVersion);
+
+	WorldObject::Write(f);
+
+	mesh->Write(f);
+
+	std::string textureFilename;
+	if (texture != NULL)
+		textureFilename = texture->GetFilename();
+	f.Write("texture", textureFilename);
+
+	f.Write("colour",colour);
 }
 

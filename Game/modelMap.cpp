@@ -402,7 +402,7 @@ void ModelMap::FlattenSquare(int index, int mapx, int mapy)
 {
 	// make sure it can be flattened
 	D3DXVECTOR3 pos = map[mapy * sizeX + mapx].triangle1.v1.position;
-	std::vector<IndestructableRegion*> irs = BaseApp::Get()->GetCurrentRuntime()->GetIndestructableRegions();
+	std::vector<IndestructableRegion*> irs = BaseApp::GetApp().GetCurrentRuntime()->GetIndestructableRegions();
 	for (int i=0; i < irs.size(); i++)
 	{
 		if (irs[i]->Inside(pos))
@@ -429,7 +429,7 @@ void ModelMap::FlattenSquare(int index, int mapx, int mapy, float amount)
 {
 	// make sure it can be flattened
 	D3DXVECTOR3 pos = map[mapy * sizeX + mapx].triangle1.v1.position;
-	std::vector<IndestructableRegion*> irs = BaseApp::Get()->GetCurrentRuntime()->GetIndestructableRegions();
+	std::vector<IndestructableRegion*> irs = BaseApp::GetApp().GetCurrentRuntime()->GetIndestructableRegions();
 	for (int i=0; i < irs.size(); i++)
 	{
 		if (irs[i]->Inside(pos))
@@ -511,7 +511,7 @@ void ModelMap::CalculateMissileImpact(D3DXVECTOR3 pos, float range)
 bool ModelMap::CheckBulletCollision(D3DXVECTOR3 pos)
 {
 	Device* dev = Interface::GetDevice();
-	Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
+	Runtime* rt = BaseApp::GetApp().GetCurrentRuntime();
 	if (rt != NULL)
 	{
 		int w = dev->GetWidth();
@@ -619,13 +619,20 @@ void ModelMap::Draw(D3DXVECTOR3 targetPos, int splitScreenType)
 		int endWidth = width;
 		int startHeight = 0;
 		int endHeight = height;
-		if (splitScreenType == Runtime::SC_HORIZONTAL)
+		if (splitScreenType == SC_HORIZONTAL)
 		{
 			startHeight = height / 4;
 			endHeight = startHeight + height / 2;
 		}
-		else if (splitScreenType == Runtime::SC_VERTICAL)
+		else if (splitScreenType == SC_VERTICAL)
 		{
+			startWidth = width / 4;
+			endWidth = startWidth + width / 2;
+		}
+		else if (splitScreenType == SC_FOUR)
+		{
+			startHeight = height / 4;
+			endHeight = startHeight + height / 2;
 			startWidth = width / 4;
 			endWidth = startWidth + width / 2;
 		}
@@ -947,37 +954,36 @@ BoundingBox* ModelMap::GetBoundingBox()
 	return WorldObject::GetBoundingBox();
 }
 
-void ModelMap::Read(XmlNode* node)
+void ModelMap::Read(BaseStreamer& _f)
 {
-	XmlNode::CheckVersion(node, modelMapSignature, modelMapVersion);
-	WorldObject::Read(node->GetChild(WorldObject::Signature()));
+	BaseStreamer& f = _f.GetChild(modelMapSignature,modelMapVersion);
+	WorldObject::Read(f);
 
-	node->Read("scale", scale);
-	node->Read("depth", depth);
-	node->Read("sizeX", sizeX);
-	node->Read("sizeY", sizeY);
-	node->Read("width", width);
-	node->Read("height", height);
-	node->Read("filename", filename);
-	node->Read("textureFilename", textureFilename);
-	node->Read("fgTextureFilename", fgTextureFilename);
+	f.Read("scale", scale);
+	f.Read("depth", depth);
+	f.Read("sizeX", sizeX);
+	f.Read("sizeY", sizeY);
+	f.Read("width", width);
+	f.Read("height", height);
+	f.Read("filename", filename);
+	f.Read("textureFilename", textureFilename);
+	f.Read("fgTextureFilename", fgTextureFilename);
 
 	Update();
 }
 
-XmlNode* ModelMap::Write()
+void ModelMap::Write(BaseStreamer& _f)
 {
-	XmlNode* node = XmlNode::NewChild(modelMapSignature,modelMapVersion);
-	node->Add(WorldObject::Write());
+	BaseStreamer& f = _f.NewChild(modelMapSignature,modelMapVersion);
+	WorldObject::Write(f);
 
-	node->Write("scale", scale);
-	node->Write("depth", depth);
-	node->Write("sizeX", sizeX);
-	node->Write("sizeY", sizeY);
-	node->Write("width", width);
-	node->Write("height", height);
-	node->Write("filename", filename);
-	node->Write("textureFilename", textureFilename);
-	node->Write("fgTextureFilename", fgTextureFilename);
-	return node;
+	f.Write("scale", scale);
+	f.Write("depth", depth);
+	f.Write("sizeX", sizeX);
+	f.Write("sizeY", sizeY);
+	f.Write("width", width);
+	f.Write("height", height);
+	f.Write("filename", filename);
+	f.Write("textureFilename", textureFilename);
+	f.Write("fgTextureFilename", fgTextureFilename);
 }

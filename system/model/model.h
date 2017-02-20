@@ -46,14 +46,8 @@ public:
 	const D3DXCOLOR& GetColour();
 	void SetColour(const D3DXCOLOR& colour);
 
-	virtual XmlNode* Write();
-	virtual void Read(XmlNode* node);
-
-	// return the signature of this object
-	virtual std::string Signature()
-	{
-		return modelSignature;
-	}
+	virtual void Write(BaseStreamer& f);
+	virtual void Read(BaseStreamer& f);
 
 private:
 	// helper function for optimise mesh

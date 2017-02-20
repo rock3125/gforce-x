@@ -9,7 +9,6 @@
 
 std::string System::dataDirectory;
 std::string System::appDirectory;
-std::string System::soundsDirectory;
 stdext::hash_map<System::ActionState, System::Action> System::actions;
 
 int System::oidCounter=0;
@@ -22,21 +21,19 @@ const char* System::CR = "\n";
 
 D3DXMATRIXA16 System::identityMatrix;
 D3DXQUATERNION System::identityQuaternion;
-D3DXVECTOR3 System::zeroVector;
 
 /////////////////////////////////////////////////////////
 
 void System::Initialise()
 {
 	// initialise timer
-	Time::Get()->Initialise();
+	Time::GetTimer().Initialise();
 
 	// get path
 	char buf[MAX_PATH];
-	char tempBuf[MAX_PATH];
 	_getcwd(buf,MAX_PATH);
 	_strlwr_s(buf,MAX_PATH);
-	int len = strlen(buf);
+	int len=strlen(buf);
 
 	// randomise
 	srand(GetTickCount());
@@ -47,16 +44,8 @@ void System::Initialise()
 		strcat_s(buf,MAX_PATH,"\\");
 	}
 	appDirectory=buf;
-	strcat_s(buf, MAX_PATH, "data\\");
-	dataDirectory = buf;
-
-	strcpy_s(tempBuf, MAX_PATH, buf);
-	strcat_s(tempBuf, MAX_PATH, "sounds\\");
-	soundsDirectory = tempBuf;
-
-	std::string f;
-	std::transform(dataDirectory.begin(),dataDirectory.end(),std::back_inserter(f),tolower);
-	dataDirectory=f;
+	strcat_s(buf,MAX_PATH,"data\\");
+	dataDirectory=buf;
 
 	actions[A_SELECT1]=Action();
 	actions[A_SELECT2]=Action();
@@ -69,17 +58,11 @@ void System::Initialise()
 
 	D3DXMatrixIdentity(&identityMatrix);
 	D3DXQuaternionIdentity(&identityQuaternion);
-	zeroVector = D3DXVECTOR3(0,0,0);
 }
 
 const D3DXMATRIXA16* System::GetIdentityMatrix()
 {
 	return &identityMatrix;
-}
-
-D3DXVECTOR3* System::GetZeroVector()
-{
-	return &zeroVector;
 }
 
 const D3DXQUATERNION* System::GetIdentityQuaternion()
@@ -92,11 +75,6 @@ std::string System::GetDataDirectory()
 	return dataDirectory;
 }
 
-std::string System::GetSoundsDirectory()
-{
-	return soundsDirectory;
-}
-
 std::string System::GetAppDirectory()
 {
 	return appDirectory;
@@ -106,8 +84,8 @@ std::string System::RemoveDataDirectory(const std::string& _fname)
 {
 	if (_fname.size()>dataDirectory.size())
 	{
-		std::string fname;
-		std::transform(_fname.begin(),_fname.end(),std::back_inserter(fname),tolower);
+		std::string fname = _fname;
+		//std::transform(_fname.begin(),_fname.end(),std::back_inserter(fname),tolower);
 		if (fname.substr(0,dataDirectory.size())==dataDirectory)
 		{
 			return fname.substr(dataDirectory.size());

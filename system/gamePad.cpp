@@ -150,7 +150,7 @@ void GamePad::RestoreDeviceObjects()
 		hr = lpGamePad[i]->SetDataFormat(&c_dfDIJoystick2);
 		if (hr == DI_OK)
 		{
-			HWND hWnd = Interface::Get()->GetFocusWindow();
+			HWND hWnd = Interface::GetI()->GetFocusWindow();
 			::SetFocus(hWnd);
 			::SetActiveWindow(hWnd);
 			hr = lpGamePad[i]->SetCooperativeLevel(hWnd, DISCL_BACKGROUND);

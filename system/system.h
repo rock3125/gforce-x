@@ -34,8 +34,6 @@ public:
 	static const D3DXMATRIXA16* GetIdentityMatrix();
 	// fast access to identity quaternion
 	static const D3DXQUATERNION* GetIdentityQuaternion();
-	// fast access to zero vector
-	static D3DXVECTOR3* GetZeroVector();
 
 	// oid counter management for save and load
 	static int GetOidCounter();
@@ -77,9 +75,6 @@ public:
 
 	// get application directory
 	static std::string GetAppDirectory();
-
-	// get sounds directory
-	static std::string GetSoundsDirectory();
 
 	// remove the data directory prefix from a filename if possible
 	static std::string RemoveDataDirectory(const std::string& fname);
@@ -129,7 +124,6 @@ private:
 	// root file directory of system
 	static std::string dataDirectory;
 	static std::string appDirectory;
-	static std::string soundsDirectory;
 
 	// state set of system
 	static stdext::hash_map<ActionState, Action> actions;
@@ -142,8 +136,5 @@ private:
 
 	// identity quaternion access
 	static D3DXQUATERNION identityQuaternion;
-
-	// zero origin
-	static D3DXVECTOR3 zeroVector;
 };
 

@@ -19,26 +19,26 @@
 #include "game/commonModels.h"
 #include "game/modelMap.h"
 
+// setup constants
+float Missile::INIT_ACCEL = 0.1f;
+float Missile::INIT_FUEL = 5;
+float Missile::FUEL_USAGE = 0.01f;
+float Missile::ANGULAR_SPEED = 4;
+float Missile::MAX_SPEED = 1.5f;
+float Missile::LENGTH = 6.0f;
+float Missile::INFLUENCE_RANGE = 20;
+float Missile::MISSILE_FORCE = 2;
+
 ///////////////////////////////////////////////////////////
 
 Missile::Missile()
 	: exhaust(NULL)
-	, target(NULL)
 {
 	speed = 0;
 	fuel = Missile::INIT_FUEL;
 	angle = 0;
 	inUse = false;
 	exploding = false;
-
-	ANGULAR_SPEED = 4.0f;
-	LENGTH = 6.0f;
-	MAX_SPEED = 3.5f;
-	INIT_ACCEL = 0.25f;
-	INIT_FUEL = 5.0f;
-	FUEL_USAGE = 0.01f;
-	INFLUENCE_RANGE = 40.0f;
-	MISSILE_FORCE = 5.0f;
 
 	exhaust = new ParticleSource();
 	exhaust->SetColourRange(D3DXCOLOR(0.2f,0.2f,1,1), D3DXCOLOR(1,1,0,1));
@@ -57,7 +57,6 @@ Missile::~Missile()
 
 Missile::Missile(const Missile& m)
 	: exhaust(NULL)
-	, target(NULL)
 {
 	operator=(m);
 }
@@ -65,15 +64,6 @@ Missile::Missile(const Missile& m)
 const Missile& Missile::operator=(const Missile& m)
 {
 	WorldObject::operator=(m);
-
-	MAX_SPEED = m.MAX_SPEED;
-	INIT_ACCEL = m.INIT_ACCEL;
-	INIT_FUEL = m.INIT_FUEL;
-	FUEL_USAGE = m.FUEL_USAGE;
-	ANGULAR_SPEED = m.ANGULAR_SPEED;
-	LENGTH = m.LENGTH;
-	INFLUENCE_RANGE = m.INFLUENCE_RANGE;
-	MISSILE_FORCE = m.MISSILE_FORCE;
 
 	speed = m.speed;
 	angle = m.angle;
@@ -83,16 +73,6 @@ const Missile& Missile::operator=(const Missile& m)
 	exploding = m.exploding;
 
 	return *this;
-}
-
-void Missile::SetData(float acceleration, float fuel, float fuelusage, float maxspeed, float strength, float force)
-{
-	MAX_SPEED = maxspeed;
-	INIT_ACCEL = acceleration;
-	INIT_FUEL = fuel;
-	FUEL_USAGE = fuelusage;
-	INFLUENCE_RANGE = strength;
-	MISSILE_FORCE = force;
 }
 
 void Missile::Explode()
@@ -105,14 +85,8 @@ void Missile::Explode()
 							 D3DXCOLOR(1,1,0.2f,1), D3DXCOLOR(1,0.2f,0,1));
 	exploding = true;
 
-	DoMapDamage();
-
 	// push ships away from the missile as if by force
-	Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
-
-	// make sound
-	rt->GP_PlaySound(Runtime::EXPLODE, false);
-
+	Runtime* rt = BaseApp::GetApp().GetCurrentRuntime();
 	std::vector<Ship*> ships = rt->GetShips();
 	D3DXVECTOR3 shipPos, dirn;
 	shipPos.z = 0;
@@ -123,7 +97,7 @@ void Missile::Explode()
 		float dx = shipPos.x - pos.x;
 		float dy = shipPos.y - pos.y;
 		float dist = dx * dx + dy * dy;
-		float rangeSq = Missile::INFLUENCE_RANGE *  Missile::INFLUENCE_RANGE * 2;
+		float rangeSq = Missile::INFLUENCE_RANGE *  Missile::INFLUENCE_RANGE;
 		if (dist < rangeSq)
 		{
 			float force = 1 - (dist / rangeSq);
@@ -181,7 +155,7 @@ bool Missile::CollisionMissleWithWall()
 	D3DXVECTOR3 top, bottom;
 	bottom = GetPosition();
 	top = System::OffsetVector(bottom, angle, Missile::LENGTH);
-	Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
+	Runtime* rt = BaseApp::GetApp().GetCurrentRuntime();
 	ModelMap* mm = rt->GetModelMap();
 	if (mm != NULL)
 	{
@@ -199,7 +173,7 @@ bool Missile::CollisionMissileWithShip()
 	D3DXVECTOR3 top, bottom;
 	bottom = GetPosition();
 	top = System::OffsetVector(bottom, angle, Missile::LENGTH);
-	Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
+	Runtime* rt = BaseApp::GetApp().GetCurrentRuntime();
 	std::vector<Ship*> ships = rt->GetShips();
 
 	for (int i=0; i < ships.size(); i++)
@@ -228,14 +202,9 @@ bool Missile::GetInUse()
 	return inUse;
 }
 
-void Missile::SetInUse(bool inUse)
-{
-	this->inUse = inUse;
-}
-
 void Missile::DoMapDamage()
 {
-	Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
+	Runtime* rt = BaseApp::GetApp().GetCurrentRuntime();
 	ModelMap* map = rt->GetModelMap();
 	if (map != NULL)
 	{
@@ -247,7 +216,6 @@ void Missile::EventLogic(double time)
 {
 	if (inUse)
 	{
-		float weight = time * 100.0f;
 		if (exploding)
 		{
 			// finished?
@@ -255,10 +223,11 @@ void Missile::EventLogic(double time)
 			{
 				exploding = false;
 				inUse = false;
+				DoMapDamage();
 			}
 			else
 			{
-				explosion->EventLogic(time * 0.5);
+				explosion->EventLogic(time);
 			}
 		}
 		else
@@ -286,12 +255,12 @@ void Missile::EventLogic(double time)
 				{
 					if (resAngle > angle)
 					{
-						angle -= (Missile::ANGULAR_SPEED * weight);
+						angle -= Missile::ANGULAR_SPEED;
 						if (angle < 0) angle += 360;
 					}
 					else if (resAngle < angle)
 					{
-						angle += (Missile::ANGULAR_SPEED* weight);
+						angle += Missile::ANGULAR_SPEED;
 						if (angle > 360) angle -= 360;
 					}
 				}
@@ -299,12 +268,12 @@ void Missile::EventLogic(double time)
 				{
 					if (resAngle > angle)
 					{
-						angle += (Missile::ANGULAR_SPEED* weight);
+						angle += Missile::ANGULAR_SPEED;
 						if (angle > 360) angle -= 360;
 					}
 					else if (resAngle < angle)
 					{
-						angle -= (Missile::ANGULAR_SPEED* weight);
+						angle -= Missile::ANGULAR_SPEED;
 						if (angle < 0) angle += 360;
 					}
 				}
@@ -317,25 +286,22 @@ void Missile::EventLogic(double time)
 			// get missile up to speed
 			if (speed < Missile::MAX_SPEED)
 			{
-				speed += (INIT_ACCEL* weight);
+				speed += INIT_ACCEL;
 			}
 
 			// move the missile and set its angle
-			pos = System::OffsetVector(pos, angle, speed * weight);
+			pos = System::OffsetVector(pos, angle, speed);
 			SetPosition(pos);
 
 			SetRotationEuler(D3DXVECTOR3(0,0,angle));
 
 			// decrease fuel
-			fuel = fuel - (Missile::FUEL_USAGE* weight * 0.1f);
+			fuel = fuel - Missile::FUEL_USAGE;
 			if (fuel <= 0)
 			{
 				fuel = 0;
 				Explode();
 			}
-
-			pos.z = 8;
-			exhaust->AddParticle(pos, 0, angle + 180);
 			exhaust->EventLogic(time);
 
 			// check for collision - and act
@@ -364,6 +330,9 @@ void Missile::Draw(double time, const D3DXVECTOR3& _pos)
 				model->SetRotationQuat(GetRotationQuat());
 				model->Draw(time);
 			}
+			D3DXVECTOR3 pos = GetPosition();
+			pos.z = 8;
+			exhaust->AddParticle(pos, 0, angle + 180);
 			exhaust->Draw(time, _pos);
 		}
 	}

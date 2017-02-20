@@ -10,7 +10,6 @@
 #pragma once
 
 #include "system/model/worldObject.h"
-#include "system/network/packetObserver.h"
 #include "system/input.h"
 
 class Model;
@@ -20,8 +19,6 @@ class Shield;
 class ParticleSource;
 class Explosion;
 class Missile;
-
-class DataPosition;
 
 ///////////////////////////////////////////////////////////
 
@@ -33,15 +30,9 @@ public:
 	Ship(const Ship&);
 	const Ship& operator=(const Ship&);
 
-	// check if a bullet hits this ship or its missile
-	void CheckBulletCollision(Bullet* bullet);
-
 	// setup test controls
-	void SetupKeyboard(int kbId);
+	void SetupKeyboard();
 	void SetupGamePad(int gpId);
-
-	// set the values for the missile's behaviour
-	void SetMissileData(float acceleration, float fuel, float fuelusage, float maxspeed, float strength, float force);
 
 	// draw the ship
 	virtual void Draw(double time, const D3DXVECTOR3& pos);
@@ -55,34 +46,9 @@ public:
 	// push the ship (explosions etc)
 	void Push(float dx, float dy, float force);
 
-	// write the internals to a packet
-	void WriteToPacket(DataPosition* packet);
-	// read the internals from a packet
-	void ReadFromPacket(DataPosition* packet);
-
 	// save and load Ship
-	virtual XmlNode* Write();
-	virtual void Read(XmlNode* node);
-
-	int PlayerId()
-	{
-		return playerId;
-	}
-
-	void PlayerId(int playerId)
-	{
-		this->playerId = playerId;
-	}
-
-	int MyScore()
-	{
-		return myScore;
-	}
-
-	void MyScore(int myScore)
-	{
-		this->myScore = myScore;
-	}
+	virtual void Read(BaseStreamer&);
+	virtual void Write(BaseStreamer&);
 
 	// get set max missiles
 	int GetMaxMissiles();
@@ -137,31 +103,16 @@ public:
 
 	void SetInitialPosition(const D3DXVECTOR3& initialPosition);
 
-	// is this unit network controlled?
-	void IsNetworkControlled(bool isNetworkControlled)
-	{
-		this->isNetworkControlled = isNetworkControlled;
-	}
-
 	// update internal bounding volume
 	virtual void UpdateBoundingBox();
 	virtual BoundingBox* GetBoundingBox();
-
-	// return the signature of this object
-	virtual std::string Signature()
-	{
-		return shipSignature;
-	}
 
 protected:
 	// init values
 	void SetInit();
 
-	// shoot the main weapon / check eligibility
+	// shoot the main weapon
 	void Fire();
-
-	// fire the bullet
-	void DoFire();
 
 	// decrease shields with hit damage
 	void DecreaseShields(float damage);
@@ -169,9 +120,6 @@ protected:
 	// check bullets of other ship collide with me
 	void CheckShipToShipCollision();
 	void CheckCaveCollision();
-
-	// for networking clients to transmit their details
-	void TransmitMyInformation();
 
 private:
 	// have we landed
@@ -234,10 +182,6 @@ private:
 	// fuel usage
 	float	fuelUsage;
 
-	// delay for next bullet can be fired
-	double bulletTime;
-	double BULLET_DELAY;
-
 	// the physical shield around the ship
 	int shieldHitCount;
 	int shieldHitCountInit;
@@ -246,6 +190,10 @@ private:
 	// shield settings [0..1]
 	float shield;
 	float shieldStrength;
+
+	// delay firing meganism
+	int fireDelay;
+	int fireCounter;
 
 	// when shields == 0 -> destroyed
 	bool exploding;
@@ -264,9 +212,6 @@ private:
 
 	// dummy target for non-specific targets
 	WorldObject*	dummyTarget;
-
-	// are we currently underwater?
-	bool			isUnderwater;
 
 	// 5 inputs for system
 	enum
@@ -297,31 +242,6 @@ private:
 	static float WALL_HIT_DAMAGE;
 	static float BULLET_MISSILE_HIT_DISTANCE;
 	static int SHIELD_ANIM_COUNT;
-
-	// sounds & drawing over network
-	bool hasThrust;
-	bool doFire;
-	bool doFireMissile;
-	bool doWaterSound;
-	bool startExplosion;
-	int missileTargetId;
-
-	// missile settings (from ship data)
-	float missileAcceleration;
-	float missileFuel;
-	float missileFuelusage;
-	float missileMaxspeed;
-	float missileStrength;
-	float missileForce;
-
-	// number of points I have
-	int myScore;
-
-	// player id (for network play
-	int playerId;
-
-	// is this ship network controlled
-	bool isNetworkControlled;
 
 	// signature and version
 	static std::string shipSignature;

@@ -8,7 +8,7 @@
 
 #include "d3d9/interface.h"
 
-std::string Level::levelSignature="level";
+std::string Level::levelSignature="lev";
 int Level::levelVersion=1;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,7 @@ Level::Level()
 	sceneRoot->SetName("Scene root");
 
 	objects.push_back(sceneRoot);
-	objectMap[sceneRoot->GetOid()] = sceneRoot;
+	objectMap[sceneRoot->GetOid()]=sceneRoot;
 }
 
 Level::~Level()
@@ -162,8 +162,112 @@ void Level::RebuildObjectMap()
 	objectMap.clear();
 	for (int i=0; i<objects.size(); i++)
 	{
-		objectMap[objects[i]->GetOid()] = objects[i];
+		objectMap[objects[i]->GetOid()]=objects[i];
 	}
+}
+
+void Level::Write(BaseStreamer& _f)
+{
+	BaseStreamer& f = _f.NewChild(levelSignature,levelVersion);
+
+	// save oid of scene root
+	sceneRootOid=sceneRoot->GetOid();
+	f.Write("sceneRootOid",sceneRootOid);
+
+	// save all objects
+	int count=objects.size();
+	f.Write("objectCount",count);
+	for (int i=0; i<count; i++)
+	{
+		int type=objects[i]->GetWorldType();
+
+		std::string str = "obj" + System::Int2Str(i+1);
+		BaseStreamer& f2 = f.NewChild(str,1);
+		f2.Write("type",type);
+
+		objects[i]->Write(f2);
+	}
+}
+
+void Level::Read(BaseStreamer& _f)
+{
+	BaseStreamer& f = _f.GetChild(levelSignature,levelVersion);
+
+	// get oid of scene root
+	f.Read("sceneRootOid",sceneRootOid);
+
+	// remove all existing objects
+	// don't delete them since screen root is object[0]
+	objects.clear();
+
+	// get all objects
+	int maxOid=0;
+	int count;
+	f.Read("objectCount",count);
+	for (int i=0; i<count; i++)
+	{
+		std::string str = "obj" + System::Int2Str(i+1);
+		BaseStreamer& f2 = f.GetChild(str,1);
+
+		// get factory to create this object
+		int t;
+		f2.Read("type",t);
+		WorldObject::WorldType type=WorldObject::WorldType(t);
+		WorldObject* object=ObjectFactory::CreateObject(type);
+
+		object->Read(f2);
+
+		// keep oids clean
+		if (object->GetOid()>maxOid)
+			maxOid=object->GetOid();
+
+		// any parent oids = 0 are auto-parented to the scene root
+
+		// add object
+		if (System::ValidOid(object->GetParentOid()) || object->GetOid() == sceneRootOid)
+		{
+			// set scene root if possible
+			if (object->GetOid() == sceneRootOid)
+			{
+				sceneRoot->SetPosition(object->GetPosition());
+				sceneRoot->SetRotationQuat(object->GetRotationQuat());
+				sceneRoot->SetScale(object->GetScale());
+				sceneRoot->SetOid(object->GetOid());
+				objects.push_back(sceneRoot);
+				safe_delete(object);
+			}
+			else
+			{
+				objects.push_back(object);
+			}
+		}
+		else
+		{
+			// object not used - remove it
+			Log::GetLog() << "WARNING: orphaned object, Oid " << object->GetOid() << System::CR;
+			safe_delete(object);
+		}
+	}
+
+	// set oid counter for next creations
+	System::SetOidCounter(maxOid+1);
+
+	RebuildObjectMap();
+
+	// add objects to their resepective parents
+	// needs a valid object map!!!
+	ResetParents();
+
+	// re-compile object scripts
+	count = objects.size();
+	for (int i=0; i<count; i++)
+	{
+		if (objects[i]->GetScriptable())
+		{
+			objects[i]->UpdateCode();
+		}
+	}
+
 }
 
 WorldObject* Level::Pick(Camera* camera,const D3DXVECTOR2& mousePos,bool getClosest)
@@ -254,114 +358,5 @@ WorldObject* Level::Pick(Camera* camera,const D3DXVECTOR2& mousePos,bool getClos
 	}
 	return result;
 */
-}
-
-XmlNode* Level::Write()
-{
-	XmlNode* node = XmlNode::NewChild(levelSignature, levelVersion);
-
-	// save oid of scene root
-	sceneRootOid = sceneRoot->GetOid();
-	node->Write("sceneRootOid", sceneRootOid);
-
-	// save all objects
-	int count=objects.size();
-	for (int i = 0; i < count; i++)
-	{
-		int type = objects[i]->GetWorldType();
-		XmlNode* f2 = XmlNode::NewChild("obj", 1);
-		f2->Write("type",type);
-		f2->Add(objects[i]->Write());
-
-		node->Add(f2);
-	}
-	return node;
-}
-
-void Level::Read(XmlNode* level)
-{
-	XmlNode::CheckVersion(level, levelSignature, levelVersion);
-
-	// remove all existing objects
-	// don't delete them since screen root is object[0]
-	objects.clear();
-
-	level->Read("sceneRootOid", sceneRootOid);
-
-	int maxOid=0;
-
-	std::vector<XmlNode*> children = level->GetChildren();
-	std::vector<XmlNode*>::iterator pos = children.begin();
-	while (pos != children.end())
-	{
-		XmlNode* node = *pos;
-		if (node->GetTag() == "obj")
-		{
-			// nodes of version 1 only
-			XmlNode::CheckVersion(node, "obj", 1);
-
-			// get factory to create this object
-			int t;
-			node->Read("type", t);
-		
-			WorldObject::WorldType type = (WorldObject::WorldType)t;
-			WorldObject* object = ObjectFactory::CreateObject(type);
-
-			object->Read(node->GetChild(object->Signature()));
-
-			// keep oids clean
-			if (object->GetOid() > maxOid)
-			{
-				maxOid = object->GetOid();
-			}
-
-			// any parent oids = 0 are auto-parented to the scene root
-
-			// add object
-			if (System::ValidOid(object->GetParentOid()) || object->GetOid() == sceneRootOid)
-			{
-				// set scene root if possible
-				if (object->GetOid() == sceneRootOid)
-				{
-					sceneRoot->SetPosition(object->GetPosition());
-					sceneRoot->SetRotationQuat(object->GetRotationQuat());
-					sceneRoot->SetScale(object->GetScale());
-					sceneRoot->SetOid(object->GetOid());
-					objects.push_back(sceneRoot);
-					safe_delete(object);
-				}
-				else
-				{
-					objects.push_back(object);
-				}
-			}
-			else
-			{
-				// object not used - remove it
-				Log::GetLog() << "WARNING: orphaned object, Oid " << object->GetOid() << System::CR;
-				safe_delete(object);
-			}
-		}
-		pos++;
-	}
-
-	// set oid counter for next creations
-	System::SetOidCounter(maxOid+1);
-
-	RebuildObjectMap();
-
-	// add objects to their resepective parents
-	// needs a valid object map!!!
-	ResetParents();
-
-	// re-compile object scripts
-	int count = objects.size();
-	for (int i = 0; i < count; i++)
-	{
-		if (objects[i]->GetScriptable())
-		{
-			objects[i]->UpdateCode();
-		}
-	}
 }
 

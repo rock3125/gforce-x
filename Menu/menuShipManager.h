@@ -11,7 +11,7 @@
 
 #include "system/input.h"
 
-class ShipData;
+class MenuShip;
 
 //////////////////////////////////////////////////////////////
 
@@ -23,10 +23,8 @@ public:
 	MenuShipManager(const MenuShipManager&);
 	const MenuShipManager& operator=(const MenuShipManager&);
 
-	void SetShipDefinitions(std::vector<ShipData*> ships)
-	{
-		this->ships = ships;
-	}
+	// load menus from file
+	void Load(const std::string& filename);
 
 	// draw menu manager
 	void Draw(bool selected, float& xpos, float& ypos);
@@ -35,7 +33,7 @@ public:
 	void EventLogic(double time);
 
 	// get the selected ship
-	ShipData* GetSelectedShip();
+	MenuShip* GetSelectedShip();
 
 private:
 	enum
@@ -58,15 +56,15 @@ private:
 	Input::Event* control[NUM_CONTROLS];
 
 	// collection of all menus
-	std::vector<ShipData*> ships;
+	std::vector<MenuShip*> ship;
 
 	// flashing menu item
-	double blinkTime;
+	float blinkTime;
 	bool blinking;
 	int lastAction;
 
 	// blink speed
-	double BLINK_INTERVAL;
+	static float BLINK_INTERVAL;
 
 	D3DXCOLOR colour1;
 	D3DXCOLOR colour2;

@@ -40,17 +40,11 @@ public:
 	void ResetParents();
 
 	// save and load level
-	void Read(XmlNode* level);
-	XmlNode* Write();
+	void Read(BaseStreamer&);
+	void Write(BaseStreamer&);
 
 	// given a camera and a mouse pos, pick an object from the scene
 	WorldObject* Pick(Camera* camera,const D3DXVECTOR2& mousePos,bool getClosest);
-
-	// return the signature of this object
-	virtual std::string Signature()
-	{
-		return levelSignature;
-	}
 
 protected:
 	void RebuildObjectMap();

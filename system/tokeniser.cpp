@@ -471,20 +471,7 @@ bool Tokeniser::GetOptionalToken(const std::string& token)
 
 bool Tokeniser::GetCompulsaryTokenOption(const std::string& t1,const std::string& t2)
 {
-	Token token1 = Get(t1);
-	if (token1 == TUNKNOWN)
-	{
-		SetError("unknown token: " + t1);
-		return false;
-	}
-
-	Token token2 = Get(t2);
-	if (token2 == TUNKNOWN)
-	{
-		SetError("unknown token: " + t2);
-		return false;
-	}
-	return GetCompulsaryTokenOption(token1, token2);
+	return false;
 }
 
 bool Tokeniser::GetCompulsaryTokenOption(Token t1,Token t2)

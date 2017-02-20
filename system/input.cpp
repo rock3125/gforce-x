@@ -37,17 +37,17 @@ int Input::StringToKey(std::string str)
 	return (int)str[0];
 }
 
-bool Input::CheckEvent(Event* theEvent)
+bool Input::CheckEvent(Event* event)
 {
-	if (theEvent != NULL)
+	if (event != NULL)
 	{
-		if (theEvent->type == KEYBOARD)
+		if (event->type == KEYBOARD)
 		{
-			switch (theEvent->subType)
+			switch (event->subType)
 			{
 				case KEY:
 				{
-					return Keyboard::Get()->GetKeyDown(theEvent->specific);
+					return Keyboard::Get()->GetKeyDown(event->specific);
 				}
 				case SHIFT_KEY:
 				{
@@ -59,17 +59,17 @@ bool Input::CheckEvent(Event* theEvent)
 				}
 			}
 		}
-		else if (theEvent->type == GAMEPAD)
+		else if (event->type == GAMEPAD)
 		{
-			switch (theEvent->subType)
+			switch (event->subType)
 			{
 				case GAMEPAD_BUTTON:
 				{
-					return GamePad::Get()->GetButtonMapping(theEvent->gamePadId, theEvent->specific);
+					return GamePad::Get()->GetButtonMapping(event->gamePadId, event->specific);
 				}
 				case GAMEPAD_AXIS:
 				{
-					return GamePad::Get()->GetAxisMapping(theEvent->gamePadId, theEvent->specific);
+					return GamePad::Get()->GetAxisMapping(event->gamePadId, event->specific);
 				}
 			}
 		}

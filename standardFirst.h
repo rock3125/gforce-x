@@ -42,7 +42,6 @@
 #include <ostream>
 #include <algorithm>
 #include <bitset>
-#include <map>
 
 //////////////////////////////////////////////////////////
 //! system

@@ -25,6 +25,15 @@ public:
 	ModelMap(const ModelMap&);
 	const ModelMap& operator=(const ModelMap&);
 
+	// split screen types
+	enum
+	{
+		SC_SINGLE,
+		SC_HORIZONTAL,
+		SC_VERTICAL,
+		SC_FOUR
+	};
+
 	// update button interface - update landscape interally
 	// with possible new level, new textures, etc.
 	void Update();
@@ -66,18 +75,12 @@ public:
 	void SetSideColourBottom(D3DXCOLOR sideColourBottom);
 
 	// save and load ModelMap
-	virtual void Read(XmlNode* node);
-	virtual XmlNode* Write();
+	virtual void Read(BaseStreamer&);
+	virtual void Write(BaseStreamer&);
 
 	// update internal bounding volume
 	virtual void UpdateBoundingBox();
 	virtual BoundingBox* GetBoundingBox();
-
-	// return the signature of this object
-	virtual std::string Signature()
-	{
-		return modelMapSignature;
-	}
 
 protected:
 	// load a map from file

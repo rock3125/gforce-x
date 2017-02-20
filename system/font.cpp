@@ -88,32 +88,6 @@ void Font::Write(float x, float y, const std::string& str, D3DXCOLOR colour)
 	dev->SetRenderState(D3DRS_ALPHATESTENABLE,FALSE);
 }
 
-void Font::Write(float x, float y, const std::string& str)
-{
-	Device* dev = Interface::GetDevice();
-
-	dev->SetTextureStageState(0,D3DTSS_COLOROP,D3DTOP_SELECTARG1);
-	dev->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
-	dev->SetTextureStageState(0,D3DTSS_COLORARG1,D3DTA_TEXTURE);
-
-	dev->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_POINT);
-	dev->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_POINT);
-
-	dev->SetTexture(0,texture);
-	dev->SetRenderState(D3DRS_ALPHATESTENABLE,FALSE);
-
-	dev->SetFVF(D3DPFVF4);
-
-	float xpos = (float)(int)x;
-	float ypos = (float)(int)y;
-	for (int i=0; i<str.length(); i++)
-	{
-		int letterId = int(str[i]);
-		WriteLetter(xpos, ypos, str[i]);
-		xpos = xpos + (float)widths[letterId];
-	}
-}
-
 void Font::WriteLetter(float x, float y, char ch)
 {
 	D3DPVERTEX4 vertices[4]; // define 4 vertices (a quad)
@@ -205,19 +179,6 @@ bool Font::Load(const std::string& _fname)
 	font = new byte[size];
 
 	file.ReadData("", font, size);
-
-	// reverse r & b's to give me a correct RGB
-	int qsize = size / 4;
-	for (int i=0; i < qsize; i++)
-	{
-		byte r = font[i * 4 + 0];
-		byte g = font[i * 4 + 1];
-		byte b = font[i * 4 + 2];
-		font[i * 4 + 0] = b;
-		font[i * 4 + 1] = g;
-		font[i * 4 + 2] = r;
-	}
-
 	file.Close();
 
 	return SetupD3DFont();

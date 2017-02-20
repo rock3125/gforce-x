@@ -14,7 +14,6 @@
 #include "system/BaseApp.h"
 #include "system/particleSource.h"
 #include "system/model/model.h"
-#include "system/network/dataPacket.h"
 
 #include "game/ship.h"
 #include "game/modelMap.h"
@@ -23,7 +22,6 @@
 #include "game/shield.h"
 #include "game/explosion.h"
 #include "game/missile.h"
-#include "game/water.h"
 
 std::string Ship::shipSignature="ship";
 int Ship::shipVersion=1;
@@ -111,6 +109,7 @@ Ship::Ship(const Ship& s)
 	, dummyTarget(NULL)
 {
 	SetInit();
+
 	operator=(s);
 }
 
@@ -158,120 +157,15 @@ const Ship& Ship::operator=(const Ship& s)
 	return *this;
 }
 
-void Ship::SetMissileData(float acceleration, float fuel, float fuelusage, float maxspeed, float strength, float force)
+void Ship::SetupKeyboard()
 {
-	missile->SetData(acceleration, fuel, fuelusage, maxspeed, strength, force);
+	control[THRUST] = new Input::Event(Input::KEYBOARD, Input::KEY, 0, BaseApp::GetApp().Down());
+	control[LEFT]   = new Input::Event(Input::KEYBOARD, Input::KEY, 0, BaseApp::GetApp().Left());
+	control[RIGHT]  = new Input::Event(Input::KEYBOARD, Input::KEY, 0, BaseApp::GetApp().Right());
+	control[FIRE_BULLET]  = new Input::Event(Input::KEYBOARD, Input::KEY, 0, BaseApp::GetApp().Up());
+   	control[FIRE_MISSILE] = new Input::Event(Input::KEYBOARD, Input::KEY, 0, BaseApp::GetApp().Fire1());
 }
 
-void Ship::WriteToPacket(DataPosition* packet)
-{
-	// transmit my details to other players
-	packet->pos = GetPosition();
-	packet->rot = GetRotationQuat();
-	packet->angle = angle;
-
-	// thrust
-	packet->hasThrust = hasThrust;
-	packet->doFire = doFire;
-	packet->doWaterSound = doWaterSound;
-	packet->startExplosion = startExplosion;
-	packet->speed = speed;
-	packet->baseOffset = baseOffset;
-	packet->doFireMissile = doFireMissile;
-	packet->missileTargetId = missileTargetId;
-	packet->shieldHitCount = shieldHitCount;
-
-	// indicators
-	packet->shield = shield;
-	packet->fuel = fuel;
-	packet->numBullets = numBullets;
-	packet->numMissiles = numMissiles;
-	packet->myScore = myScore;
-}
-
-void Ship::ReadFromPacket(DataPosition* dataPosition)
-{
-	Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
-	std::vector<Ship*> ships = rt->GetShips();
-
-	SetPosition(dataPosition->pos);
-	SetRotationQuat(dataPosition->rot);
-	UpdateWorldTransform();
-
-	angle = dataPosition->angle;
-	speed = dataPosition->speed;
-	baseOffset = dataPosition->baseOffset;
-	missileTargetId = dataPosition->missileTargetId;
-	shieldHitCount = dataPosition->shieldHitCount;
-
-	// fire a bullet?
-	if (dataPosition->doFire)
-	{
-		DoFire();
-	}
-
-	// the missile
-	if (dataPosition->doFireMissile)
-	{
-		// find the ship with the right missileTargetId (isa playerId)
-		Ship* ship = NULL;
-		for (int i=0; i < ships.size(); i++)
-		{
-			if (ships[i]->PlayerId() == missileTargetId)
-			{
-				ship = ships[i];
-				break;
-			}
-		}
-		if (ship != NULL)
-		{
-			missile->Fire(GetPosition(),angle, baseOffset, speed, ship); 
-			rt->GP_PlaySound(Runtime::FIRE_MISSILE, false);
-		}
-	}
-
-	// explosion?
-	if (dataPosition->startExplosion)
-	{
-		shield = 0;
-		DecreaseShields(0);
-	}
-
-	// indicators
-	shield = dataPosition->shield;
-	fuel = dataPosition->fuel;
-	numBullets = dataPosition->numBullets;
-	numMissiles = dataPosition->numMissiles;
-	myScore = dataPosition->myScore;
-
-	// sounds
-	if (dataPosition->hasThrust)
-	{
-		// add particle
-		D3DXVECTOR3 pos = GetPosition();
-		pos.z = 8;
-		exhaust->AddParticle(pos, baseOffset * 1.25f, angle + 180);
-
-		// make sound
-		rt->GP_PlaySound(Runtime::THRUST, true);
-	}
-	if (dataPosition->doWaterSound)
-	{
-		rt->GP_PlaySound(Runtime::UNDERWATER, false);
-	}
-}
-
-// configure this ship to use the keyboard
-void Ship::SetupKeyboard(int kbId)
-{
-	control[THRUST] = new Input::Event(Input::KEYBOARD, Input::KEY, 0, BaseApp::Get()->Down(kbId));
-	control[LEFT]   = new Input::Event(Input::KEYBOARD, Input::KEY, 0, BaseApp::Get()->Left(kbId));
-	control[RIGHT]  = new Input::Event(Input::KEYBOARD, Input::KEY, 0, BaseApp::Get()->Right(kbId));
-	control[FIRE_BULLET]  = new Input::Event(Input::KEYBOARD, Input::KEY, 0, BaseApp::Get()->Up(kbId));
-   	control[FIRE_MISSILE] = new Input::Event(Input::KEYBOARD, Input::KEY, 0, BaseApp::Get()->Fire1(kbId));
-}
-
-// configure this stip to use gamepad with id
 void Ship::SetupGamePad(int gpId)
 {
 	control[THRUST] = new Input::Event(Input::GAMEPAD, Input::GAMEPAD_AXIS, gpId, 3);
@@ -295,8 +189,6 @@ void Ship::SetInit()
 	hasLanded = true;
 	angle = 0;
 
-	isUnderwater = false;
-
 	// global settings for the level
 	speedDeccel = 0.90f;
 	xSpeedDeccel = 0.98f;
@@ -309,9 +201,6 @@ void Ship::SetInit()
 	fuel = 1;
 	fuelUsage = 0.0001f;
 
-	// count score
-	myScore = 0;
-
 	// ammo
 	maxBulletLoad = 1000;
 	numBullets = maxBulletLoad;
@@ -321,10 +210,9 @@ void Ship::SetInit()
 	bulletTTL = 100;
 	bulletSpeed = 2;
 	dropOffFactor = 4;
+	fireDelay = 3;
+	fireCounter = 0;
 	SetMaxActiveBullets(maxActiveBullets);
-
-	bulletTime = 0.0;
-	BULLET_DELAY = 0.1;
 
 	// shield
 	shieldStrength = 0.1f;
@@ -332,23 +220,6 @@ void Ship::SetInit()
 	shieldHitCount = 0;
 
 	exploding = false;
-
-	// missile default settings
-	missileAcceleration = 0.25f;
-	missileFuel = 5.0f;
-	missileFuelusage = 0.01f;
-	missileMaxspeed = 3.5f;
-	missileStrength = 40.0f;
-	missileForce = 5.0f;
-
-	// network settigns
-	isNetworkControlled = false;
-	hasThrust = false;
-	doFire = false;
-	doWaterSound = false;
-	startExplosion = false;
-	doFireMissile = false;
-	missileTargetId = 0;
 }
 
 void Ship::SetModel(Model* _model)
@@ -538,18 +409,13 @@ void Ship::Push(float dx, float dy, float force)
 
 	// start animation
 	shieldHitCount = Ship::SHIELD_ANIM_COUNT;
-	DecreaseShields(force * shieldStrength * 0.1f);
+	DecreaseShields(force * shieldStrength);
 }
 
 void Ship::EventLogic(double time)
 {
-	Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
+	Runtime* rt = BaseApp::GetApp().GetCurrentRuntime();
 	std::vector<Ship*> ships = rt->GetShips();
-
-	// reset the explosion flag for networking purposes
-	startExplosion = false;
-	doFireMissile = false;
-	bulletTime = bulletTime + time;
 
 	// process missile logic
 	missile->EventLogic(time);
@@ -566,15 +432,13 @@ void Ship::EventLogic(double time)
 	// do exhaust
 	exhaust->EventLogic(time);
 
-	if (!exploding  && !isNetworkControlled)
+	if (!exploding)
 	{
 		// weight speed vs. time
-		float weight = time * 25.0f;
+		float weight = min(1, (float)time * 25);
 
-		hasThrust = false;
 		if (Input::CheckEvent(control[THRUST]) && fuel > 0)
 		{
-			hasThrust = true;
 			speed += accel * weight;
 			if (speed > maxSpeed) speed = maxAccel;
 
@@ -584,64 +448,30 @@ void Ship::EventLogic(double time)
 			exhaust->AddParticle(pos, baseOffset * 1.25f, angle + 180);
 
 			// use up fuel to move
-			fuel = fuel - (fuelUsage * weight * 0.25f);
+			fuel = fuel - fuelUsage * weight;
 			if (fuel < 0)
-			{
 				fuel = 0;
-			}
-
-			// make sound
-			// make sound
-			rt->GP_PlaySound(Runtime::THRUST, true);
 		}
-
-		doFire = false;
-		if (Input::CheckEvent(control[FIRE_BULLET]) && bulletTime > BULLET_DELAY)
+		if (Input::CheckEvent(control[FIRE_BULLET]))
 		{
-			bulletTime = 0.0;
 			Fire();
 		}
 		if (Input::CheckEvent(control[FIRE_MISSILE]) && !missile->GetInUse() && numMissiles > 0)
 		{
-			missileTargetId = 0;
-
 			numMissiles--;
-			Ship* ship = NULL;
-			float closest = -1.0f;
-			D3DXVECTOR3 pos1 = GetPosition();
-			D3DXVECTOR3 pos2;
-			for (int i=0; i < ships.size(); i++)
+			int targetId = 0;
+			if (ships.size() > 1)
 			{
-				Ship* ship2 = ships[i];
-				if (ship2 != this)
-				{
-					pos2 = ship2->GetPosition();
-					float dx = pos1.x - pos2.x;
-					float dy = pos1.y - pos2.y;
-					float dz = pos1.z - pos2.z;
-					float dist = dx * dx + dy * dy + dz * dz;
-					if (dist < closest || closest == -1.0f)
-					{
-						missileTargetId = ship2->playerId;
-						closest = dist;
-						ship = ship2;
-					}
-				}
+				if (ships[0] == this)
+					targetId = 1;
 			}
-
-			// fire the missile
-			if (ship != NULL)
-			{
-				doFireMissile = true;
-				missile->Fire(GetPosition(), angle, baseOffset, speed, ship); 
-				rt->GP_PlaySound(Runtime::FIRE_MISSILE, false);
-			}
+			missile->Fire(GetPosition(),angle,baseOffset,speed,ships[targetId]); 
 		}
 		if (Input::CheckEvent(control[LEFT]))
 		{
 			if (!hasLanded)
 			{
-				angle += rotationalVelocity * weight * 2.0f;
+				angle += rotationalVelocity * weight;
 				if (angle > 360) angle -= 360;
 			}
 		}
@@ -649,78 +479,29 @@ void Ship::EventLogic(double time)
 		{
 			if (!hasLanded)
 			{
-				angle -= rotationalVelocity * weight * 2.0f;
+				angle -= rotationalVelocity * weight;
 				if (angle < 0) angle += 360;
 			}
 		}
 
 		if (speed > 0)
 		{
-			speed = speed * speedDeccel * weight;
+			speed = speed * speedDeccel;
 			hasLanded = false;
 		}
 
-		Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
-
-		// are we under water?
-		D3DXVECTOR3 myPos = GetPosition();
-		bool underWater = false;
-		std::vector<Water*> waters = rt->GetWater();
-		std::vector<Water*>::iterator pos = waters.begin();
-		while (pos != waters.end())
-		{
-			Water* water = *pos;
-			if (water->Inside(myPos))
-			{
-				underWater = true;
-				break;
-			}
-			pos++;
-		}
-
-		// make the sound?
-		doWaterSound = false;
-		if (underWater && !isUnderwater)
-		{
-			isUnderwater = true;
-			doWaterSound = true;
-			rt->GP_PlaySound(Runtime::UNDERWATER, false);
-		}
-		else if (!underWater)
-		{
-			isUnderwater = false;
-		}
-
-		// get gravity - and reverse it under water
 		float gravity = 0;
+		Runtime* rt = BaseApp::GetApp().GetCurrentRuntime();
 		ModelMap* mm = rt->GetModelMap();
 		if (mm != NULL)
 		{
 			gravity = mm->GetGravity();
-			if (underWater)
-			{
-				gravity = -gravity;
-			}
 		}
 
 		if (!hasLanded)
 		{
-			if (hasThrust)
-			{
-				xSpeed += cosf((angle+90) * System::deg2rad) * speed * weight * 50.0f;
-				ySpeed += ((sinf((angle+90) * System::deg2rad) * speed) * weight * 50.0f - (gravity * weight));
-			}
-			else
-			{
-				xSpeed = xSpeed * 0.99f;
-				ySpeed -= (gravity * weight);
-			}
-			// incur slowdown if changing from air to water
-			if (doWaterSound)
-			{
-				xSpeed = xSpeed * 0.5f;
-				ySpeed = ySpeed * 0.5f;
-			}
+			xSpeed += cosf((angle+90) * System::deg2rad) * speed;
+			ySpeed += ((sinf((angle+90) * System::deg2rad) * speed) - gravity * weight);
 
 			if (xSpeed > maxSpeed) xSpeed = maxSpeed;
 			if (xSpeed < -maxSpeed) xSpeed = -maxSpeed;
@@ -778,15 +559,19 @@ void Ship::EventLogic(double time)
 			}
 		}
 
-		myPos.x += xSpeed;
-		myPos.y += ySpeed;
+		D3DXVECTOR3 pos = GetPosition();
 
-		SetPosition(myPos);
+		xSpeed = xSpeed * xSpeedDeccel;
+		pos.x += xSpeed;
+		pos.y += ySpeed;
+
+		SetPosition(pos);
 
 		SetRotationEuler(D3DXVECTOR3(0,0,angle));
 
 		// or do we land?
-		if (!hasThrust && !hasLanded)
+		bool accelerating = Input::CheckEvent(control[THRUST]);
+		if (!accelerating && !hasLanded)
 		{
 			D3DXVECTOR3 aabbmin, aabbmax;
 			std::vector<Base*> base = rt->GetBases();
@@ -799,21 +584,17 @@ void Ship::EventLogic(double time)
 				if (fabsf(xSpeed) < landSpeed && fabsf(ySpeed) < landSpeed && 
 					(angle >= (360-landAngle) || angle <= landAngle))
 				{
-					float dist = (myPos.y - (aabbmax.y+baseOffset));
+					float dist = (pos.y - (aabbmax.y+baseOffset));
 
 					// then it must be just above the base
-					if (aabbmin.x < myPos.x && myPos.x < aabbmax.x && dist > 0 && dist < landHeight)
+					if (aabbmin.x < pos.x && pos.x < aabbmax.x && dist > 0 && dist < landHeight)
 					{
-						// make sound
-						rt->GP_PlaySound(Runtime::LAND_SHIP, false);
-
 						hasLanded = true;
-						myPos.y = aabbmax.y + baseOffset;
+						pos.y = aabbmax.y + baseOffset;
 						xSpeed = 0;
 						ySpeed = 0;
 						speed = 0;
 						angle = 0;
-						SetPosition(myPos);
 					}
 				}
 			}
@@ -822,8 +603,17 @@ void Ship::EventLogic(double time)
 		// check damage
 		CheckShipToShipCollision();
 		CheckCaveCollision();
+
+		// update shield timing
+		if (shieldHitCount > 0)
+		{
+			shieldHitCount--;
+		}
+
+		// shield animation
+		shieldModel->EventLogic(time);
 	}
-	else if (exploding)
+	else
 	{
 		if (explosion->Finished())
 		{
@@ -841,56 +631,35 @@ void Ship::EventLogic(double time)
 		}
 		explosion->EventLogic(time);
 	}
-
-	if (!exploding)
-	{
-		// update shield timing
-		if (shieldHitCount > 0)
-		{
-			shieldHitCount--;
-		}
-		// shield animation
-		shieldModel->EventLogic(time);
-	}
 }
 
 void Ship::Fire()
 {
-	if (numBullets > 0)
+	fireCounter++;
+	if (numBullets > 0 && (fireCounter%fireDelay)==0 )
 	{
 		numBullets--;
-		DoFire();
-	}
-}
 
-void Ship::DoFire()
-{
-	// find first available bullet
-	int use = -1;
-	for (int i=0; i < maxActiveBullets; i++)
-	{
-		if (!bullets[i].GetInUse())
+		// find first available bullet
+		int use = -1;
+		for (int i=0; i < maxActiveBullets; i++)
 		{
-			use = i;
-			break;
+			if (!bullets[i].GetInUse())
+			{
+				use = i;
+				break;
+			}
 		}
-	}
-	// do we have one?
-	if (use != -1)
-	{
-		bullets[use].Fire(GetPosition(), baseOffset, angle);
-
-		// make sound
-		Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
-		rt->GP_PlaySound(Runtime::FIRE_LASER, false);
-		doFire = true;
+		// do we have one?
+		if (use != -1)
+		{
+			bullets[use].Fire(GetPosition(), baseOffset, angle);
+		}
 	}
 }
 
 void Ship::DisplayStatus(float x, float y)
 {
-	Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
-
 	D3DXCOLOR yellow = D3DXCOLOR(0.6f,0.8f,0,1);
 	D3DXCOLOR red = D3DXCOLOR(0.2f,0.1f,0,1);
 	D3DXCOLOR fontBackColour = D3DXCOLOR(0,0,0,1);
@@ -899,7 +668,7 @@ void Ship::DisplayStatus(float x, float y)
 
 	Device* dev = Interface::GetDevice();
 	dev->SetWorldTransform(System::GetIdentityMatrix());
-	Font* font = dev->GetLargeFont();
+	Font* font = dev->GetFont();
 
 	// fill background
 	dev->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
@@ -932,9 +701,6 @@ void Ship::DisplayStatus(float x, float y)
 	dev->DrawDisplayBar(x+20, y+22, (float)numBullets, (float)maxBulletLoad, yellow, red, 75, 6);
 	dev->DrawDisplayBar(x+20, y+40, fuel, 1, yellow, red, 75, 6);
 
-	std::string scoreStr = System::Int2Str(myScore);
-	font->Write(x + 120, y + 4, scoreStr, fontForeColour);
-
 	float xpos = 1.0f / (float)maxMissiles;
 	float yp = y + 64;
 	for (int i=0; i < numMissiles; i++)
@@ -950,42 +716,39 @@ void Ship::EventInit()
 	initialPosition = GetPosition();
 }
 
-void Ship::CheckBulletCollision(Bullet* bullet)
-{
-	D3DXVECTOR3 pos = bullet->GetPosition() - GetPosition();
-	float dist = pos.x * pos.x + pos.y * pos.y;
-	if (!exploding && dist < baseOffset*baseOffset)
-	{
-		bullet->SetInUse(false);
-		shieldHitCount = Ship::SHIELD_ANIM_COUNT;
-		DecreaseShields(Ship::BULLET_HIT_DAMAGE * shieldStrength);
-	}
-	// does the bullet hit a missile?
-	if (missile->GetInUse() && !missile->GetExploding())
-	{
-		pos = bullet->GetPosition() - missile->GetPosition();
-		float dist = pos.x * pos.x + pos.y * pos.y;
-		if (dist < Ship::BULLET_MISSILE_HIT_DISTANCE)
-		{
-			bullet->SetInUse(false);
-			missile->Explode();
-		}
-	}
-}
-
 void Ship::CheckShipToShipCollision()
 {
-	Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
+	Runtime* rt = BaseApp::GetApp().GetCurrentRuntime();
 	std::vector<Ship*> ships = rt->GetShips();
 
 	// check all my bullets against each ship
+	D3DXVECTOR3 pos;
 	for (int i=0; i < maxActiveBullets; i++)
 	{
 		for (int j=0; j < ships.size(); j++)
 		{
 			if (bullets[i].GetInUse())
 			{
-				ships[j]->CheckBulletCollision(&bullets[i]);
+				pos = bullets[i].GetPosition() - ships[j]->GetPosition();
+				float dist = pos.x * pos.x + pos.y * pos.y;
+				if (!exploding && dist < baseOffset*baseOffset)
+				{
+					bullets[i].SetInUse(false);
+					ships[j]->shieldHitCount = Ship::SHIELD_ANIM_COUNT;
+					ships[j]->DecreaseShields(Ship::BULLET_HIT_DAMAGE * shieldStrength);
+				}
+				// does the bullet hit a missile?
+				Missile* missile = ships[j]->missile;
+				if (missile->GetInUse() && !missile->GetExploding())
+				{
+					pos = bullets[i].GetPosition() - missile->GetPosition();
+					float dist = pos.x * pos.x + pos.y * pos.y;
+					if (dist < Ship::BULLET_MISSILE_HIT_DISTANCE)
+					{
+						bullets[i].SetInUse(false);
+						missile->Explode();
+					}
+				}
 			}
 		}
 	}
@@ -993,7 +756,7 @@ void Ship::CheckShipToShipCollision()
 
 void Ship::CheckCaveCollision()
 {
-	Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
+	Runtime* rt = BaseApp::GetApp().GetCurrentRuntime();
 	ModelMap* mm = rt->GetModelMap();
 	if (mm != NULL)
 	{
@@ -1019,23 +782,12 @@ void Ship::DecreaseShields(float damage)
 	shield = shield - damage;
 
 	// explode?
-	if (shield <= 0 && !exploding)
+	if (shield <= 0)
 	{
 		shieldHitCount = 0;
 		shield = 0;
 		explosion->Start();
 		exploding = true;
-		startExplosion = true;
-
-		// make sound
-		Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
-		rt->GP_PlaySound(Runtime::EXPLODE, false);
-		// make sure I get penalised
-		rt->GP_UpdateScore(this);
-	}
-	if (shield < 0)
-	{
-		shield = 0;
 	}
 }
 
@@ -1106,37 +858,34 @@ BoundingBox* Ship::GetBoundingBox()
 	return NULL;
 }
 
-void Ship::Read(XmlNode* node)
+void Ship::Read(BaseStreamer& _f)
 {
-	XmlNode::CheckVersion(node, shipSignature, shipVersion);
-	WorldObject::Read(node->GetChild(WorldObject::Signature()));
+	BaseStreamer& f = _f.GetChild(shipSignature,shipVersion);
+	WorldObject::Read(f);
 
 	safe_delete(model);
 	safe_delete(bulletModel);
 
-	XmlNode* f1 = node->GetChild("shipModel");
-	XmlNode::CheckVersion(f1, "shipModel", 1);
-
+	BaseStreamer& f1 = f.GetChild("shipModel",1);
 	model = new Model();
 	model->Read(f1);
 
-	XmlNode* f2 = node->GetChild("bulletModel");
-	XmlNode::CheckVersion(f2, "bulletModel", 1);
+	BaseStreamer& f2 = f.GetChild("bulletModel",1);
 	bulletModel = new Model();
 	bulletModel->Read(f2);
 
-	node->Read("maxAccel", maxAccel);
-	node->Read("maxSpeed", maxSpeed);
-	node->Read("accel", accel);
-	node->Read("rotationalVelocity", rotationalVelocity);
-	node->Read("baseOffset", baseOffset);
+	f.Read("maxAccel", maxAccel);
+	f.Read("maxSpeed", maxSpeed);
+	f.Read("accel", accel);
+	f.Read("rotationalVelocity", rotationalVelocity);
+	f.Read("baseOffset", baseOffset);
 
-	node->Read("maxBulletLoad", maxBulletLoad);
-	node->Read("maxActiveBullets", maxActiveBullets);
-	node->Read("bulletTTL", bulletTTL);
-	node->Read("bulletSpeed", bulletSpeed);
-	node->Read("dropOffFactor", dropOffFactor);
-	node->Read("maxMissiles", maxMissiles);
+	f.Read("maxBulletLoad", maxBulletLoad);
+	f.Read("maxActiveBullets", maxActiveBullets);
+	f.Read("bulletTTL", bulletTTL);
+	f.Read("bulletSpeed", bulletSpeed);
+	f.Read("dropOffFactor", dropOffFactor);
+	f.Read("maxMissiles", maxMissiles);
 
 	SetMaxActiveBullets(maxActiveBullets);
 
@@ -1145,32 +894,27 @@ void Ship::Read(XmlNode* node)
 	UpdateBoundingBox();
 }
 
-XmlNode* Ship::Write()
+void Ship::Write(BaseStreamer& _f)
 {
-	XmlNode* node = XmlNode::NewChild(shipSignature, shipVersion);
-	node->Add(WorldObject::Write());
+	BaseStreamer& f = _f.NewChild(shipSignature,shipVersion);
+	WorldObject::Write(f);
 
-	XmlNode* f1 = XmlNode::NewChild("shipModel",1);
-	f1->Add(model->Write());
-	node->Add(f1);
+	BaseStreamer& f1 = f.NewChild("shipModel",1);
+	model->Write(f1);
+	BaseStreamer& f2 = f.NewChild("bulletModel",1);
+	bulletModel->Write(f2);
 
-	XmlNode* f2 = XmlNode::NewChild("bulletModel",1);
-	f2->Add(bulletModel->Write());
-	node->Add(f2);
+	f.Write("maxAccel", maxAccel);
+	f.Write("maxSpeed", maxSpeed);
+	f.Write("accel", accel);
+	f.Write("rotationalVelocity", rotationalVelocity);
+	f.Write("baseOffset", baseOffset);
 
-	node->Write("maxAccel", maxAccel);
-	node->Write("maxSpeed", maxSpeed);
-	node->Write("accel", accel);
-	node->Write("rotationalVelocity", rotationalVelocity);
-	node->Write("baseOffset", baseOffset);
-
-	node->Write("maxBulletLoad", maxBulletLoad);
-	node->Write("maxActiveBullets", maxActiveBullets);
-	node->Write("bulletTTL", bulletTTL);
-	node->Write("bulletSpeed", bulletSpeed);
-	node->Write("dropOffFactor", dropOffFactor);
-	node->Write("maxMissiles", maxMissiles);
-
-	return node;
+	f.Write("maxBulletLoad", maxBulletLoad);
+	f.Write("maxActiveBullets", maxActiveBullets);
+	f.Write("bulletTTL", bulletTTL);
+	f.Write("bulletSpeed", bulletSpeed);
+	f.Write("dropOffFactor", dropOffFactor);
+	f.Write("maxMissiles", maxMissiles);
 }
 

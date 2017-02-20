@@ -305,35 +305,32 @@ void Mesh::RestoreDeviceObjects()
 	// index buffer
 	safe_release(indexBuffer);
 
-	if (numVertices >0 && numTriangles > 0)
-	{
-		D3DPOOL pool = D3DPOOL_MANAGED; //D3DPOOL_DEFAULT;
-		int size = sizeof(D3DPVERTEX)*numVertices;
-		vertexBuffer = dev->CreateVertexBuffer(size,usage,D3DPFVF,pool);
-		if (vertexBuffer==NULL)
-			return;
+	D3DPOOL pool = D3DPOOL_MANAGED; //D3DPOOL_DEFAULT;
+	int size = sizeof(D3DPVERTEX)*numVertices;
+	vertexBuffer = dev->CreateVertexBuffer(size,usage,D3DPFVF,pool);
+	if (vertexBuffer==NULL)
+		return;
 
-		void* buffer=NULL;
-		if (!SUCCEEDED(vertexBuffer->Lock(0,0,&buffer,0)))
-			return;
+	void* buffer=NULL;
+	if (!SUCCEEDED(vertexBuffer->Lock(0,0,&buffer,0)))
+		return;
 
-		// copy in verts
-		memcpy(buffer,(void*)vertsArray,size);
-		vertexBuffer->Unlock();
+	// copy in verts
+	memcpy(buffer,(void*)vertsArray,size);
+	vertexBuffer->Unlock();
 
-		size = numTriangles*sizeof(D3DPINDEX);
-		indexBuffer = dev->CreateIndexBuffer(size,usage,D3DFMT_INDEX16,D3DPOOL_DEFAULT);
-		if (indexBuffer==NULL)
-			return;
+	size = numTriangles*sizeof(D3DPINDEX);
+	indexBuffer = dev->CreateIndexBuffer(size,usage,D3DFMT_INDEX16,D3DPOOL_DEFAULT);
+	if (indexBuffer==NULL)
+		return;
 
-		void* indexBufferPtr = NULL;
-		if (!SUCCEEDED(indexBuffer->Lock(0,0,&indexBufferPtr,0)))
-			return;
+	void* indexBufferPtr = NULL;
+	if (!SUCCEEDED(indexBuffer->Lock(0,0,&indexBufferPtr,0)))
+		return;
 
-		// copy in indices
-		memcpy(indexBufferPtr,(void*)indicesArray,size);
-		indexBuffer->Unlock();
-	}
+	// copy in indices
+	memcpy(indexBufferPtr,(void*)indicesArray,size);
+	indexBuffer->Unlock();
 }
 
 void Mesh::GetBoundingBox(D3DXVECTOR3& aabbMin,D3DXVECTOR3& aabbMax)
@@ -364,6 +361,43 @@ void Mesh::GetBoundingBox(D3DXVECTOR3& aabbMin,D3DXVECTOR3& aabbMax)
 	aabbMax=maxp;
 }
 
+void Mesh::Read(BaseStreamer& _f)
+{
+	BaseStreamer& f = _f.GetChild(meshSignature,meshVersion);
+
+	Free();
+
+	f.Read("name",name);
+	f.Read("numVertices",numVertices);
+	f.Read("numTriangles",numTriangles);
+
+	if (numVertices>0)
+	{
+		BaseStreamer& f2 = f.GetChild("vertices",1);
+		vertices=new D3DPVERTEX[numVertices];
+		for (int i=0; i<numVertices; i++)
+		{
+			std::string tag = "v" + System::Int2Str(i+1);
+			BaseStreamer& f3 = f2.GetChild(tag,1);
+			f3.Read(tag,vertices[i]);
+		}
+	}
+
+	if (numTriangles>0)
+	{
+		BaseStreamer& f2 = f.GetChild("indices",1);
+		indices=new D3DPINDEX[numTriangles];
+		for (int i=0; i<numTriangles; i++)
+		{
+			std::string tag = "t" + System::Int2Str(i+1);
+			BaseStreamer& f3 = f2.GetChild(tag,1);
+			f3.Read(tag,indices[i]);
+		}
+	}
+
+	RestoreDeviceObjects();
+}
+
 void Mesh::SetVertex(D3DPVERTEX* v,int index,
 					 const D3DXVECTOR3& position,
 					 const D3DXVECTOR3& normal,
@@ -381,94 +415,34 @@ void Mesh::SetIndex(D3DPINDEX* i,int index,WORD i1,WORD i2,WORD i3)
 	i[index].v3=i3;
 }
 
-XmlNode* Mesh::Write()
+void Mesh::Write(BaseStreamer& _f)
 {
-	XmlNode* node = XmlNode::NewChild(meshSignature, meshVersion);
+	BaseStreamer& f = _f.NewChild(meshSignature,meshVersion);
 
-	node->Write("name", name);
-	node->Write("numVertices", numVertices);
-	node->Write("numTriangles", numTriangles);
+	f.Write("name",name);
+	f.Write("numVertices",numVertices);
+	f.Write("numTriangles",numTriangles);
 
 	if (numVertices>0)
 	{
-		XmlNode* node2 = XmlNode::NewChild("vertices", 1);
+		BaseStreamer& f2 = f.NewChild("vertices",1);
 		for (int i=0; i<numVertices; i++)
 		{
-			std::string tag = "v";
-			XmlNode* newNode = XmlNode::NewChild(tag, 1);
-			newNode->Write(tag, vertices[i]);
-			node2->Add(newNode);
+			std::string tag = "v" + System::Int2Str(i+1);
+			BaseStreamer& f3 = f2.NewChild(tag,1);
+			f3.Write(tag,vertices[i]);
 		}
-		node->Add(node2);
 	}
 
 	if (numTriangles>0)
 	{
-		XmlNode* node2 = XmlNode::NewChild("indices", 1);
+		BaseStreamer& f2 = f.NewChild("indices",1);
 		for (int i=0; i<numTriangles; i++)
 		{
-			std::string tag = "t";
-			XmlNode* newNode = XmlNode::NewChild(tag, 1);
-			newNode->Write(tag, indices[i]);
-			node2->Add(newNode);
-		}
-		node->Add(node2);
-	}
-	return node;
-}
-
-void Mesh::Read(XmlNode* node)
-{
-	XmlNode::CheckVersion(node, meshSignature, meshVersion);
-
-	Free();
-
-	node->Read("name",name);
-	node->Read("numVertices",numVertices);
-	node->Read("numTriangles",numTriangles);
-
-	if (numVertices>0)
-	{
-		XmlNode* node2 = node->GetChild("vertices");
-		XmlNode::CheckVersion(node2, "vertices", 1);
-
-		vertices = new D3DPVERTEX[numVertices];
-		std::vector<XmlNode*> verts = node2->GetChildren();
-		if (verts.size() != numVertices)
-		{
-			throw new Exception("num vertices does not match actual vertices");
-		}
-		int cntr = 0;
-		std::vector<XmlNode*>::iterator pos = verts.begin();
-		while (pos != verts.end())
-		{
-			XmlNode* n = *pos;
-			n->Read("v", vertices[cntr++]);
-			pos++;
+			std::string tag = "t" + System::Int2Str(i+1);
+			BaseStreamer& f3 = f2.NewChild(tag,1);
+			f3.Write(tag,indices[i]);
 		}
 	}
-
-	if (numTriangles>0)
-	{
-		XmlNode* node2 = node->GetChild("indices");
-		XmlNode::CheckVersion(node2, "indices", 1);
-
-		indices = new D3DPINDEX[numTriangles];
-		std::vector<XmlNode*> inds = node2->GetChildren();
-		if (inds.size() != numTriangles)
-		{
-			throw new Exception("num triangles does not match actual triangles");
-		}
-		int cntr = 0;
-		std::vector<XmlNode*>::iterator pos = inds.begin();
-		while (pos != inds.end())
-		{
-			XmlNode* n = *pos;
-			n->Read("t", indices[cntr++]);
-			pos++;
-		}
-	}
-
-	RestoreDeviceObjects();
 }
 

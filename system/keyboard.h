@@ -16,9 +16,6 @@ public:
 	void KeyDown(int key);
 	void KeyUp(int key);
 
-	void KeyPress(int key);
-	int KeyPress();
-
 	// check if a key is down or now
 	bool GetKeyDown(int key);
 	bool GetShiftDown();
@@ -41,9 +38,6 @@ private:
 	bool keyboard[NUM_KEYS];
 	bool shiftDown;
 	bool ctrlDown;
-
-	// for keyboard checking
-	int lastKeyPressed;
 
 	static Keyboard* singleton;
 };

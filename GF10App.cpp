@@ -14,14 +14,15 @@
 #include "system/objectFactory.h"
 #include "system/timer.h"
 
+#include "system/xml/XmlParser.h"
 #include "system/model/camera.h"
 #include "system/model/level.h"
-#include "system/sound/soundSystem.h"
 #include "system/fileLog.h"
 #include "system/gamePad.h"
 #include "system/keyboard.h"
+#include "system/cpuid.h"
 
-#include "game/ship.h"
+#include "menu/menuManager.h"
 
 GF10App* GF10App::singleton = NULL;
 
@@ -32,11 +33,53 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 	// init and get
 	GF10App* rt = GF10App::Get();
 
-	// initialise my system
-	System::Initialise();
+	// load app settings
+	XmlParser* parser = new XmlParser();
+	if (!parser->LoadAndParse(System::GetAppDirectory() + "settings.xml"))
+	{
+		rt->ShowErrorMessage("could not load \"settings.xml\"", "init error");
+		return 0;
+	}
 
-	// override default settings
-	rt->LoadSettings();
+	// get screen settings node
+	XmlNode* node = parser->GetDocumentRoot()->GetChildNode("screen");
+	if (node == NULL)
+	{
+		rt->ShowErrorMessage("could not find \"screen\" settings in \"settings.xml\"", "init error");
+		return 0;
+	}
+	// check node has right attributes
+	if (!node->HasName("width") || !node->HasName("height") || !node->HasName("fullscreen"))
+	{
+		rt->ShowErrorMessage("\"screen\" settings in \"settings.xml\" missing \"width\", \"fullscreen\" or \"height\"", "init error");
+		return 0;
+	}
+
+	// set runtime parameters
+	rt->Width(System::Str2Int(node->GetValue("width")));
+	rt->Height(System::Str2Int(node->GetValue("height")));
+	rt->Fullscreen(System::ToLower(node->GetValue("fullscreen")) == "true");
+
+	// get keyboard settings node
+	XmlNode* keysNode = parser->GetDocumentRoot()->GetChildNode("keys");
+	if (keysNode == NULL)
+	{
+		rt->ShowErrorMessage("could not find \"keys\" settings in \"settings.xml\"", "init error");
+		return 0;
+	}
+	// check node has right attributes
+	if (!keysNode->HasName("left") || !keysNode->HasName("right") || !keysNode->HasName("up") ||
+		!keysNode->HasName("down") || !keysNode->HasName("fire"))
+	{
+		rt->ShowErrorMessage("\"keys\" settings in \"settings.xml\" missing \"left\", \"right\", \"up\", \"down\", or \"fire\"", "init error");
+		return 0;
+	}
+	// setup keyboard mappings for game-play
+	rt->Up(Input::StringToKey(keysNode->GetValue("up")));
+	rt->Down(Input::StringToKey(keysNode->GetValue("down")));
+	rt->Left(Input::StringToKey(keysNode->GetValue("left")));
+	rt->Right(Input::StringToKey(keysNode->GetValue("right")));
+	rt->Fire1(Input::StringToKey(keysNode->GetValue("fire")));
 
 	// setup
 	rt->hInstance = hInstance;
@@ -55,14 +98,13 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
 	// Main message loop:
 	MSG msg;
-	bool isActive = true;
-	while (isActive)
+	while (true) 
 	{
 		// see if we have a message
 		if (PeekMessage(&msg, NULL, 0, 0, 0))
 		{
 			// get it
-			isActive = GetMessage(&msg, NULL, 0, 0) > 0;
+			GetMessage(&msg, NULL, 0, 0);
 			if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg)) 
 			{
 				TranslateMessage(&msg);
@@ -72,15 +114,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 		else
 		{
 			// when app is null - the game is over and we quit
-			if (!GF10App::IsNull())
-			{
-				// idle processing whenever we can
-				GF10App::Get()->OnIdle();
-			}
-			else
-			{
-				break;
-			}
+			if (GF10App::IsNull()) break;
+			// idle processing whenever we can
+			GF10App::Get()->OnIdle();
 		}
 	}
 	GF10App::Destroy();
@@ -88,7 +124,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 }
 
 GF10App::GF10App()
-	: runtime(NULL)
 {
 	// defaults
 	Width(800);
@@ -96,22 +131,20 @@ GF10App::GF10App()
 
 	hWnd = NULL;
 
-	elapsedTime = 0;
-
-	// 10 fps
-	LOGIC_FRAME_RATE = 0.05;
-	logicFrameTime = 0.0;
+	menuManager = new MenuManager();
 }
 
 GF10App::~GF10App()
 {
-	safe_delete(runtime);
-
-	SoundSystem::Destroy();
+	safe_delete(menuManager);
 	GamePad::Destroy();
 	Keyboard::Destroy();
-
 	safe_delete(fileLog);
+}
+
+void GF10App::SetActivePlayer(int shipId)
+{
+	runtime.SetActivePlayer(shipId);
 }
 
 std::string GF10App::GetFilenameForLoad(const std::string& filter,const std::string& extn,const std::string& directory)
@@ -136,6 +169,38 @@ void GF10App::ShowErrorMessage(std::string msg,std::string title)
 
 void GF10App::ForceProcessMessages()
 {
+}
+
+Level* GF10App::Load(const std::string& fname)
+{
+	XmlParser p;
+	std::string strippedFname = System::RemoveDataDirectory(fname);
+	bool result = p.LoadAndParse(fname);
+	if (result)
+	{
+		try
+		{
+			XmlNode* root = p.GetDocumentRoot();
+
+			Level* level = new Level();
+			level->Read(*root);
+
+			// set level
+			SetCurrentLevelPtr(level);
+
+			// and the current camera
+			Camera camera;
+			camera.Read(*root);
+			runtime.SetCamera(camera);
+
+			return level;
+		}
+		catch (Exception* ex)
+		{
+			ShowErrorMessage(ex->Message(), "error loading level");
+		}
+	}
+	return NULL;
 }
 
 bool GF10App::IsNull()
@@ -202,6 +267,8 @@ BOOL GF10App::InitInstance(HINSTANCE hInstance, int nCmdShow)
 	ShowWindow(hWnd, nCmdShow);
 	UpdateWindow(hWnd);
 
+	SetCurrentRuntime(&runtime);
+
 	return TRUE;
 }
 
@@ -211,28 +278,35 @@ bool GF10App::Initialise(HWND hWnd)
 	ShowWindow(hWnd, SW_SHOW);
 	SetWindowPos(hWnd, NULL, 0, 0, width, height, SWP_NOZORDER);
 
-	// init interface
-	Interface::Get();
+	// check cpu
+	/*
+	if (!CPU::CPUSupported())
+	{
+		MessageBox(hWnd,"this CPU is not supported", "Error", MB_OK | MB_ICONERROR);
+		return false;
+	}
+	*/
+
+	// initialise my system
+	System::Initialise();
+	Interface::Create();
 
 	fileLog = new FileLog();
 
-	if (!Interface::Get()->InitialiseDevice(hWnd, width, height))
+	if (!Interface::GetI()->InitialiseDevice(hWnd, width, height))
 	{
 		MessageBox(hWnd, "Fatal error\nYour display device does not support this application.", "Startup Error", MB_OK | MB_ICONERROR);
 		return false;
 	}
 
 	// load app main font
-	Interface::GetDevice()->GetSmallFont()->Load("objects\\neuropol24.fnt");
-	Interface::GetDevice()->GetLargeFont()->Load("objects\\neuropol28.fnt");
-
-	// initialise sound system
-	SoundSystem::Get()->Initialise(hWnd);
+	Interface::GetDevice()->GetFont()->Load("objects\\neuropol10.fnt");
 
 	// initialise renderer and runtimes
-	runtime = new GF10Runtime();
-	currentRuntime = runtime;
-	runtime->Initialise();
+	runtime.Initialise();
+
+	// notify scene grap and runtime of the new (initial) level
+	runtime.NewLevel(NULL);
 
 	// initialise object system
 	ObjectFactory::Initialise();
@@ -242,20 +316,10 @@ bool GF10App::Initialise(HWND hWnd)
 	Keyboard::Get();
 
 	// load menus
-	runtime->LoadMenus();
-
-	// load sounds
-	SoundSystem::Get()->LoadStoreSample(Runtime::FIRE_LASER,   "fire.wav");
-	SoundSystem::Get()->LoadStoreSample(Runtime::FIRE_MISSILE, "missile.wav");
-	SoundSystem::Get()->LoadStoreSample(Runtime::EXPLODE,      "explosion.wav");
-	SoundSystem::Get()->LoadStoreSample(Runtime::LAND_SHIP,    "land.wav");
-	SoundSystem::Get()->LoadStoreSample(Runtime::THRUST,       "engine.wav");
-	SoundSystem::Get()->LoadStoreSample(Runtime::UNDERWATER,   "drop.wav");
+	menuManager->Load(System::GetDataDirectory() + "menu\\menus.xml");
 
 	Log::GetLog() << "initialisation successful" << System::CR << System::CR;
 
-	// start main soundtrack
-	SoundSystem::Get()->ST_Play("music\\GravityForce.mp3");
 	return true;
 }
 
@@ -267,11 +331,6 @@ void GF10App::OnKeyDown(int kchar,int flags)
 	Keyboard::Get()->KeyDown(kchar);
 	Keyboard::Get()->SetCtrlDown(ctrl);
 	Keyboard::Get()->SetShiftDown(shift);
-}
-
-void GF10App::OnKeyPress(int kchar,int flags)
-{
-	Keyboard::Get()->KeyPress(kchar);
 }
 
 void GF10App::OnKeyUp(int kchar,int flags)
@@ -286,36 +345,57 @@ void GF10App::OnKeyUp(int kchar,int flags)
 
 BOOL GF10App::OnIdle()
 {
-	if (Interface::Get()->IsDeviceOK())
+	Interface* intf = Interface::GetI();
+
+	if (intf->IsDeviceOK())
 	{
 		// if the device is not ready then attempt to reset it
-		if (Interface::Get()->IsDeviceReady())
+		if (intf->IsDeviceReady())
 		{
-			double frameTime = Time::Get()->FrameTime();
-			Time::Get()->Update();
-			
-			try
-			{
-				runtime->EventLogic(frameTime);
-				runtime->Draw(frameTime);
-			}
-			catch (Exception* ex)
-			{
-				runtime->GP_SetErrorMessage(ex->Message());
-			}
+			Time& t = Time::GetTimer();
+			double frameTime = t.FrameTime();
+			t.Update();
 
+			// poll gamepad
+			GamePad::Get()->EventLogic(frameTime);
+
+			if (menuManager->GetActive())
+			{
+				// careful - order is vital
+				menuManager->Draw(frameTime);
+				menuManager->EventLogic(frameTime);
+			}
+			else
+			{
+				// careful - order is vital
+				runtime.Draw(frameTime);
+				runtime.EventLogic(frameTime);
+			}
 		}
 		return TRUE;
 	}
 	else
 	{
-		Interface::Get()->ResetDevice();
+		intf->ResetDevice();
 		return FALSE;
 	}
 }
 
+void GF10App::QuitGame()
+{
+	// remove level from the app
+	SetCurrentLevelPtr(NULL);
+	// notify all listeners that the level is gone
+	LevelObserver::NotifyObservers((Level*)NULL);
+	// back to the menu
+	menuManager->SetActive(true);
+	// first menu, first item
+	menuManager->SetActiveMenu(0,0);
+}
+
 void GF10App::Quit()
 {
+	GF10App::Destroy();
 	PostQuitMessage(0);
 }
 
@@ -349,14 +429,6 @@ LRESULT CALLBACK GF10App::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM
 				{
 					return DefWindowProc(hWnd, message, wParam, lParam);
 				}
-			}
-			break;
-		}
-	case WM_CHAR:
-		{
-			if (!GF10App::IsNull())
-			{
-				GF10App::Get()->OnKeyPress(wParam,lParam);
 			}
 			break;
 		}

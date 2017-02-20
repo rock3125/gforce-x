@@ -16,7 +16,8 @@
 Explosion::Explosion()
 {
 	numAnimations = 7;
-	animationIndex = 0;
+	animationCounter = 0;
+	counter = 0;
 
 	inUse = false;
 
@@ -27,13 +28,6 @@ Explosion::Explosion()
 		filename = "explosion\\expl"+System::Int2Str(i)+".tga";
 		explosion[i] = TextureCache::GetTexture(filename);
 	}
-
-	// start time at 0
-	explosionTimer = 0.0;
-	// one second for a total explosion
-	EXPLOSION_DURATION = 1.0;
-	// animation takes half of that time
-	ANIMATION_DURATION = EXPLOSION_DURATION * 0.5;
 
 	// setup indices
 	indices[0] = 2;
@@ -51,24 +45,21 @@ Explosion::~Explosion()
 void Explosion::Start()
 {
 	inUse = true;
-	animationIndex = 0;
-	explosionTimer = 0.0;
+	animationCounter = 0;
+	counter = 0;
 }
 
 void Explosion::EventLogic(double time)
 {
 	if (inUse)
 	{
-		explosionTimer += time;
-
 		// slow it down a bit
-		double animationFrame = (explosionTimer / ANIMATION_DURATION) * (double)numAnimations;
-		animationIndex = (int)animationFrame;
-
-		if (explosionTimer > EXPLOSION_DURATION)
+		animationCounter = counter / 3;
+		if (animationCounter >= (numAnimations*2))
 		{
 			inUse = false;
 		}
+		counter++;
 	}
 }
 
@@ -79,7 +70,7 @@ bool Explosion::Finished()
 
 void Explosion::Draw(const D3DXVECTOR3& pos, float size)
 {
-	if (animationIndex < numAnimations)
+	if (animationCounter < numAnimations)
 	{
 		Device* dev = Interface::GetDevice();
 		dev->SetWorldTransform(System::GetIdentityMatrix());
@@ -139,7 +130,7 @@ void Explosion::Draw(const D3DXVECTOR3& pos, float size)
 		vertices[3].texture.y = 1;
 		vertices[3].normal = normal;
 
-		dev->SetTexture(0, explosion[animationIndex]);
+		dev->SetTexture(0, explosion[animationCounter]);
 		dev->SetFVF(D3DPFVF);
 		dev->DrawIndexedPrimitiveUP(D3DPT_TRIANGLELIST, 0, 4, 2, indices,  
 									D3DFMT_INDEX16, vertices, sizeof(D3DPVERTEX));

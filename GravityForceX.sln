@@ -1,13 +1,9 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GravityForceX", "GravityForceX.vcproj", "{6E91BF1D-352D-4DA9-AF89-4E717741C4F6}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GravityForceX", "GravityForceX.vcxproj", "{6E91BF1D-352D-4DA9-AF89-4E717741C4F6}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{FF32665F-7772-46D3-82CF-05138D4FF282}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GravityForceXEdit", "Editor\GravityForceXEdit.vcproj", "{BA938B30-7851-46A4-89A6-36D833014F7A}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Reflector", "Reflector\Reflector.vcproj", "{3B85CAC8-1C73-4725-9B70-4E972F1A57AB}"
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "setup\Setup.vdproj", "{FF32665F-7772-46D3-82CF-05138D4FF282}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,14 +16,8 @@ Global
 		{6E91BF1D-352D-4DA9-AF89-4E717741C4F6}.Release|Win32.ActiveCfg = Release|Win32
 		{6E91BF1D-352D-4DA9-AF89-4E717741C4F6}.Release|Win32.Build.0 = Release|Win32
 		{FF32665F-7772-46D3-82CF-05138D4FF282}.Debug|Win32.ActiveCfg = Debug
+		{FF32665F-7772-46D3-82CF-05138D4FF282}.Debug|Win32.Build.0 = Debug
 		{FF32665F-7772-46D3-82CF-05138D4FF282}.Release|Win32.ActiveCfg = Release
-		{FF32665F-7772-46D3-82CF-05138D4FF282}.Release|Win32.Build.0 = Release
-		{BA938B30-7851-46A4-89A6-36D833014F7A}.Debug|Win32.ActiveCfg = Debug|Win32
-		{BA938B30-7851-46A4-89A6-36D833014F7A}.Release|Win32.ActiveCfg = Release|Win32
-		{BA938B30-7851-46A4-89A6-36D833014F7A}.Release|Win32.Build.0 = Release|Win32
-		{3B85CAC8-1C73-4725-9B70-4E972F1A57AB}.Debug|Win32.ActiveCfg = Debug|Win32
-		{3B85CAC8-1C73-4725-9B70-4E972F1A57AB}.Release|Win32.ActiveCfg = Release|Win32
-		{3B85CAC8-1C73-4725-9B70-4E972F1A57AB}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

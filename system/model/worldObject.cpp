@@ -180,9 +180,9 @@ WorldObject::WorldType WorldObject::GetWorldType()
 	return worldType;
 }
 
-void WorldObject::SetWorldType(WorldType worldType)
+void WorldObject::SetWorldType(WorldType _worldType)
 {
-	this->worldType = worldType;
+	worldType=_worldType;
 }
 
 std::string WorldObject::GetCode() const
@@ -237,43 +237,42 @@ void WorldObject::Draw(double time)
 {
 }
 
-XmlNode* WorldObject::Write()
+void WorldObject::Write(BaseStreamer& _f)
 {
-	XmlNode* node = XmlNode::NewChild(worldObjectSignature,worldObjectVersion);
+	BaseStreamer& f = _f.NewChild(worldObjectSignature,worldObjectVersion);
 
-	node->Add(PRS::Write());
+	PRS::Write(f);
 
-	node->Write("visible", visible);
-	node->Write("scriptable", scriptable);
-	node->Write("scriptenabled", scriptEnabled);
+	f.Write("visible",visible);
+	f.Write("scriptable",scriptable);
+	f.Write("scriptenabled",scriptEnabled);
 
 	if (!code.empty())
 	{
 		std::string codeStr = System::EncodeBase64(code);
-		node->Write("code", codeStr);
+		f.Write("code",codeStr);
 	}
 	else
 	{
-		node->Write("code", code);
+		f.Write("code",code);
 	}
 
-	int t = worldType;
-	node->Write("worldType", t);
-	return node;
+	int t=worldType;
+	f.Write("worldType",t);
 }
 
-void WorldObject::Read(XmlNode* node)
+void WorldObject::Read(BaseStreamer& _f)
 {
-	XmlNode::CheckVersion(node, worldObjectSignature, worldObjectVersion);
+	BaseStreamer& f = _f.GetChild(worldObjectSignature,worldObjectVersion);
 
-	PRS::Read(node->GetChild(PRS::Signature()));
+	PRS::Read(f);
 
-	node->Read("visible",visible);
-	node->Read("scriptable",scriptable);
-	node->Read("scriptenabled",scriptEnabled);
+	f.Read("visible",visible);
+	f.Read("scriptable",scriptable);
+	f.Read("scriptenabled",scriptEnabled);
 
 	std::string codeStr;
-	node->Read("code", codeStr);
+	f.Read("code",codeStr);
 	if (!codeStr.empty())
 	{
 		code = System::DecodeBase64(codeStr);
@@ -283,13 +282,9 @@ void WorldObject::Read(XmlNode* node)
 		code.clear();
 	}
 
-	// different type?
-	if (worldType == TYPE_CONTAINER)
-	{
-		int t;
-		node->Read("worldType",t);
-		SetWorldType((WorldType)t);
-	}
+	int t;
+	f.Read("worldType",t);
+	worldType=WorldType(t);
 }
 
 

@@ -14,7 +14,7 @@
 
 ////////////////////////////////////////////////////////////
 
-Interface* Interface::singleton = NULL;
+Interface* Interface::singleton=NULL;
 
 Interface::Interface()
 	: hwndFocusWindow(NULL)
@@ -43,20 +43,19 @@ Interface::~Interface()
 
 Device* Interface::GetDevice()
 {
-	if (singleton == NULL) 
-	{
-		return NULL;
-	}
+	if (singleton == NULL) return NULL;
 	return singleton->device;
 };
 
-Interface* Interface::Get()
+Interface* Interface::GetI()
 {
-	if (singleton == NULL)
-	{
-		singleton = new Interface();
-	}
 	return singleton;
+};
+
+void Interface::Create()
+{
+	PreCond(singleton==NULL);
+	singleton=new Interface();
 };
 
 void Interface::Destroy()
@@ -87,7 +86,7 @@ int Interface::GetHeight() const
 //-----------------------------------------------------------------------------
 bool Interface::FindBestWindowedMode(HWND hWindowed,bool bRequireHAL,bool bRequireREF)
 {
-	Log::GetLog() << "finding best windowed mode";
+	Log::GetLog() << "finding best windowed mode" << System::CR;
 
 	PreCond(d3dEnumeration!=NULL);
 
@@ -156,7 +155,7 @@ EndWindowedDeviceComboSearch:
 		h = height;
 	}
 
-	Log::GetLog() << "creating d3d settings";
+	Log::GetLog() << "creating d3d settings" << System::CR;
 
 	d3dSettings = new CD3DSettings();
 
@@ -197,7 +196,7 @@ bool Interface::ConfirmDeviceHelper(D3DCAPS9* pCaps, VertexProcessingType vertex
 
 void Interface::BuildPresentParamsFromSettings(HWND hWindow)
 {
-	Log::GetLog() << "building present parameters";
+	Log::GetLog() << "building present parameters" << System::CR;
 
 	presentParams.Windowed               = d3dSettings->IsWindowed;
     presentParams.BackBufferCount        = 1;
@@ -270,7 +269,7 @@ HRESULT Interface::Initialise3DEnvironment(HWND hWindow)
 {
     HRESULT hr;
 
-	Log::GetLog() << "initialising 3d environment";
+	Log::GetLog() << "initialising 3d environment" << System::CR;
 
     D3DAdapterInfo* pAdapterInfo = d3dSettings->PAdapterInfo();
     D3DDeviceInfo* pDeviceInfo = d3dSettings->PDeviceInfo();
@@ -281,7 +280,7 @@ HRESULT Interface::Initialise3DEnvironment(HWND hWindow)
     if (pDeviceInfo->Caps.PrimitiveMiscCaps & D3DPMISCCAPS_NULLREFERENCE)
     {
         // Warn user about null ref device that can't render anything
-		Log::GetLog() << "NULL reference device.";
+		Log::GetLog() << "NULL reference device." << System::CR;
 		PreCond("NULL reference device"==NULL);
     }
 
@@ -297,7 +296,7 @@ HRESULT Interface::Initialise3DEnvironment(HWND hWindow)
     else
         behaviorFlags = 0; // TODO: throw exception
 
-	Log::GetLog() << "creating device";
+	Log::GetLog() << "creating device" << System::CR;
 
     // Create the device
     hr = d3d->CreateDevice(d3dSettings->AdapterOrdinal(), pDeviceInfo->DevType,
@@ -305,7 +304,7 @@ HRESULT Interface::Initialise3DEnvironment(HWND hWindow)
 
     if (SUCCEEDED(hr))
     {
-		Log::GetLog() << "device creation successful";
+		Log::GetLog() << "device creation successful" << System::CR;
 
         // When moving from fullscreen to windowed mode, it is important to
         // adjust the window size after recreating the device rather than
@@ -381,7 +380,7 @@ HRESULT Interface::Initialise3DEnvironment(HWND hWindow)
             strncat_s(deviceStats, 90, szDescription, maxAppend );
         }
 
-		Log::GetLog() << "device:"<< deviceStats;
+		Log::GetLog() << "device:"<< deviceStats << System::CR;
 
         // Store render target surface desc
         LPDIRECT3DSURFACE9 pBackBuffer = NULL;
@@ -395,11 +394,11 @@ HRESULT Interface::Initialise3DEnvironment(HWND hWindow)
 	{
 		if (hr == D3DERR_DRIVERINTERNALERROR)
 		{
-			Log::GetLog() << "device creation failed - this video card does not support 3d (D3DERR_DRIVERINTERNALERROR)";
+			Log::GetLog() << "device creation failed - this video card does not support 3d (D3DERR_DRIVERINTERNALERROR)" << System::CR;
 		}
 		else
 		{
-			Log::GetLog() << "device creation failed "<< hr;
+			Log::GetLog() << "device creation failed "<< hr << System::CR;
 		}
 	    return hr;
 	}
@@ -417,7 +416,7 @@ bool Interface::InitialiseDevice(HWND hWindowed,D3DPRESENT_PARAMETERS* present,U
 {
 	HRESULT hr;
 
-	Log::GetLog() << "initialise device";
+	Log::GetLog() << "initialise device" << System::CR;
 
 	PreCond(hWindowed != NULL);
 
@@ -432,7 +431,7 @@ bool Interface::InitialiseDevice(HWND hWindowed,D3DPRESENT_PARAMETERS* present,U
 	d3d = Direct3DCreate9(D3D_SDK_VERSION);
 	if (!d3d)
 	{
-		Log::GetLog() << "Could not create Direct3D9 interface, check DirectX 9 is installed.";
+		Log::GetLog() << "Could not create Direct3D9 interface, check DirectX 9 is installed." << System::CR;
 		return false;
 	}
 
@@ -441,13 +440,13 @@ bool Interface::InitialiseDevice(HWND hWindowed,D3DPRESENT_PARAMETERS* present,U
     d3dEnumeration->ConfirmDeviceCallback = ConfirmDeviceHelper;
     if (FAILED(hr=d3dEnumeration->Enumerate()))
     {
-		Log::GetLog() << "Could not enumerate devices.";
+		Log::GetLog() << "Could not enumerate devices." << System::CR;
 		return false;
     }
 
 	if (!FindBestWindowedMode(hWindowed,true,false))
 	{
-		Log::GetLog() << "Could not find windowed compatible mode.";
+		Log::GetLog() << "Could not find windowed compatible mode." << System::CR;
 		return false;
 	}
 
@@ -461,7 +460,7 @@ bool Interface::InitialiseDevice(HWND hWindowed,D3DPRESENT_PARAMETERS* present,U
 	// create the wrapper
 	if (device==NULL)
 	{
-		device = new Device(d3dDevice);
+		device=new Device(d3dDevice);
 	}
 	else
 	{
@@ -508,7 +507,7 @@ bool Interface::ResetDevice()
 	HRESULT hr = d3dDevice->TestCooperativeLevel();
 	if (hr == D3DERR_DEVICELOST)
 	{
-		Log::GetLog() << "device list, releasing resources";
+		Log::GetLog() << "device list, releasing resources" << System::CR;
 		Sleep(500);
 
 		// invalidate any device objects
@@ -525,7 +524,7 @@ bool Interface::ResetDevice()
 		HRESULT hr = d3dDevice->Reset(&presentParams);
 		if (FAILED(hr))
 		{
-			Log::GetLog() << "Could not reset the device, D3D returned: " << hr;
+			Log::GetLog() << "Could not reset the device, D3D returned: " << hr << System::CR;
 			return false;
 		}
 
@@ -548,7 +547,7 @@ void Interface::ReleaseDevice()
 {
 	deviceReady = false;
 
-	Log::GetLog() << "releasing device";
+	Log::GetLog() << "releasing device" << System::CR;
 
 	safe_release(d3dDevice);
 	safe_release(d3d);
@@ -564,7 +563,7 @@ const D3DPRESENT_PARAMETERS& Interface::GetPresentParams()
 
 void Interface::SetPresentParams(const D3DPRESENT_PARAMETERS& p)
 {
-	Log::GetLog() << "setting present parameters";
+	Log::GetLog() << "setting present parameters" << System::CR;
 
 	presentParams = p;
 	device->SetWidthHeightWindowed(presentParams.BackBufferWidth,presentParams.BackBufferHeight,

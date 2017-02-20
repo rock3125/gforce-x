@@ -31,8 +31,6 @@ public:
 		TYPE_SHIP,
 		TYPE_BASE,
 		TYPE_INDESTRUCTABLEREGION,
-		TYPE_TURRET,
-		TYPE_WATER,
 
 		TYPE_LAST,		// last of the predefined types
 
@@ -74,14 +72,8 @@ public:
 	void SetScriptEnabled(bool enabled);
 
 	// save and load WorldObject
-	virtual void Read(XmlNode*);
-	virtual XmlNode* Write();
-
-	// return the signature of this object
-	virtual std::string Signature()
-	{
-		return worldObjectSignature;
-	}
+	virtual void Read(BaseStreamer&);
+	virtual void Write(BaseStreamer&);
 
 protected:
 	// event code and functions for this object

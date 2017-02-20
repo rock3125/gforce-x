@@ -14,6 +14,7 @@
 ////////////////////////////////////////////////////////////////////
 
 MenuItem::MenuItem()
+	: nameTexture(NULL)
 {
 	showLevels = false;
 	showShips = false;
@@ -21,16 +22,15 @@ MenuItem::MenuItem()
 	numPlayers = 0;
 	player = 0;
 	inputId = 0;
-	controlMusic = false;
-	controlFullscreen = false;
-	controlResolution = false;
 }
 
 MenuItem::~MenuItem()
 {
+	nameTexture = NULL;
 }
 
 MenuItem::MenuItem(const MenuItem& mi)
+	: nameTexture(NULL)
 {
 	operator=(mi);
 }
@@ -39,15 +39,13 @@ const MenuItem& MenuItem::operator=(const MenuItem& mi)
 {
 	name = mi.name;
 	action = mi.action;
+	nameTexture = mi.nameTexture;
 	showLevels = mi.showLevels;
 	showShips = mi.showShips;
 	numPlayers = mi.numPlayers;
 	player = mi.player;
 	inputId = mi.inputId;
 	showInputs = mi.showInputs;
-	controlMusic = mi.controlMusic;
-	controlFullscreen = mi.controlFullscreen;
-	controlResolution = mi.controlResolution;
 	return *this;
 }
 
@@ -59,6 +57,14 @@ const std::string& MenuItem::GetName()
 void MenuItem::SetName(const std::string& _name)
 {
 	name = _name;
+	if (!name.empty() && (int)name.find(".") > 0)
+	{
+		nameTexture = TextureCache::GetTexture("menu\\" + name);
+	}
+	else
+	{
+		nameTexture = NULL;
+	}
 }
 
 bool MenuItem::GetShowLevels()
@@ -96,39 +102,14 @@ int MenuItem::GetNumPlayers()
 	return numPlayers;
 }
 
-bool MenuItem::ControlMusic()
-{
-	return controlMusic;
-}
-
-void MenuItem::ControlMusic(bool controlMusic)
-{
-	this->controlMusic = controlMusic;
-}
-
-bool MenuItem::ControlFullscreen()
-{
-	return controlFullscreen;
-}
-
-void MenuItem::ControlFullscreen(bool controlFullscreen)
-{
-	this->controlFullscreen = controlFullscreen;
-}
-
-bool MenuItem::ControlResolution()
-{
-	return controlResolution;
-}
-
-void MenuItem::ControlResolution(bool controlResolution)
-{
-	this->controlResolution = controlResolution;
-}
-
 void MenuItem::SetNumPlayers(int _numPlayers)
 {
 	numPlayers = _numPlayers;
+}
+
+Texture* MenuItem::GetNameTexture()
+{
+	return nameTexture;
 }
 
 const std::string& MenuItem::GetAction()
@@ -159,15 +140,5 @@ int MenuItem::GetInputId()
 void MenuItem::SetInputId(int _inputId)
 {
 	inputId = _inputId;
-}
-
-const std::string& MenuItem::UserText()
-{
-	return usertext;
-}
-
-void MenuItem::UserText(const std::string& usertext)
-{
-	this->usertext = usertext;
 }
 

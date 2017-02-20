@@ -33,14 +33,8 @@ public:
 	static Bone* GetBoneByOid(Bone* rootBone, int oid);
 
 	// read and write bones
-	virtual void Read(XmlNode* node);
-	virtual XmlNode* Write();
-
-	// return the signature of this object
-	virtual std::string Signature()
-	{
-		return boneSignature;
-	}
+	virtual void Read(BaseStreamer&);
+	virtual void Write(BaseStreamer&);
 
 private:
 	// get num frames helper

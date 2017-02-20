@@ -17,14 +17,9 @@ ObjImport::ObjImport()
 	Add("vt",true);
 	Add("vn",true);
 	Add("mtllib",true);
-	Add("d",true);
-	Add("illum",true);
 	Add("g",true);
-	Add("o",true);
-	Add("s",true);
 	Add("usemtl",true);
 	Add("f",true);
-	Add("//",false);
 	Add("/",false);
 	Add(".",false);
 	Add("newmtl",true);
@@ -37,11 +32,6 @@ ObjImport::ObjImport()
 
 ObjImport::~ObjImport()
 {
-}
-
-WorldObject* ObjImport::LoadBinary(std::string filename)
-{
-	throw new Exception("load binary not implemented");
 }
 
 WorldObject* ObjImport::ParseLoadedFile()
@@ -177,42 +167,6 @@ void ObjImport::ParseObj()
 		{
 			ScanToEol();
 		}
-		else if (token == Get("mtllib"))
-		{
-			// for now - ignore material libraries
-			GetCompulsaryToken(TIDENT);
-			if (error) break;
-			std::string materialFname = yyString;
-			token = GetNextToken();
-			if (token == Get("."))
-			{
-				GetCompulsaryToken(TIDENT);
-				if (error) break;
-				materialFname = materialFname + "." + yyString;
-			}
-			else
-			{
-				UngetToken();
-			}
-
-			// try and load the material library
-			ObjImport parser;
-			parser.Load(System::GetDataDirectory() + filePrefix + materialFname);
-			if (parser.HasErrors())
-			{
-				SetError(parser.GetError());
-				break;
-			}
-
-			parser.ParseMaterialLib();
-			if (parser.HasErrors())
-			{
-				SetError(parser.GetError());
-				break;
-			}
-
-			materials = parser.materials;
-		}
 		else if (IsModel(token))
 		{
 			UngetToken();
@@ -240,7 +194,7 @@ bool ObjImport::IsFace(Token token)
 }
 
 //model	->		['v' f f f]*
-//				['vt' f f [f]]*
+//				['vt' f f]*
 //				['vn' f f f]*
 //
 //				faces
@@ -307,10 +261,6 @@ void ObjImport::ParseModel()
 				if (error) break;
 				if (token == TINT) v2 = (float)yyInt;
 				if (token == TFLOAT) v2 = yyFloat;
-
-				// optional third parameter to be ignored for textures
-				GetOptionalToken(TFLOAT);
-				GetOptionalToken(TINT);
 
 				v.x = v1;
 				v.y = 1 - v2;
@@ -385,12 +335,12 @@ void ObjImport::GetIndices(int& i1, int& i2, int& i3)
 	GetCompulsaryToken(TINT);
 	if (error) return;
 	i1 = yyInt - 1;
-	GetCompulsaryTokenOption("/", "//");
+	GetCompulsaryToken("/");
 	if (error) return;
 	GetCompulsaryToken(TINT);
 	if (error) return;
 	i2 = yyInt - 1;
-	GetCompulsaryTokenOption("/", "//");
+	GetCompulsaryToken("/");
 	if (error) return;
 	GetCompulsaryToken(TINT);
 	if (error) return;
@@ -468,28 +418,6 @@ void ObjImport::ParseFaces()
 				}
 			}
 			while (true);
-		}
-		else if (token == Get("o"))
-		{
-			// basically ignore groupings
-			GetCompulsaryToken(TIDENT);
-			if (error) break;
-			do
-			{
-				token = GetNextToken();
-				if (token != TIDENT)
-				{
-					UngetToken();
-					break;
-				}
-			}
-			while (true);
-		}
-		else if (token == Get("s"))
-		{
-			// basically ignore s off etc.
-			GetCompulsaryToken(TIDENT);
-			if (error) break;
 		}
 		else if (token == Get("usemtl"))
 		{
@@ -642,8 +570,6 @@ ObjImport::ObjMaterial* ObjImport::GetMaterial(const std::string& name)
 //
 // material ->		newmtl ident
 //					Ns f
-//					illum f
-//					d f
 // 					Ka f f f
 // 					Kd f f f
 // 					Ks f f f
@@ -664,111 +590,94 @@ void ObjImport::ParseMaterialLib()
 		if (error) break;
 		name = yyString;
 
+		GetCompulsaryToken(Get("Ns"));
+		if (error) break;
+		GetCompulsaryTokenOption(TFLOAT,TINT);
+		if (error) break;
+		if (token == TINT) c1 = (float)yyInt;
+		if (token == TFLOAT) c1 = yyFloat;
+
+		GetCompulsaryToken(Get("Ka"));
+		if (error) break;
+		GetCompulsaryTokenOption(TFLOAT,TINT);
+		if (error) break;
+		if (token == TINT) c1 = (float)yyInt;
+		if (token == TFLOAT) c1 = yyFloat;
+		GetCompulsaryTokenOption(TFLOAT,TINT);
+		if (error) break;
+		if (token == TINT) c2 = (float)yyInt;
+		if (token == TFLOAT) c2 = yyFloat;
+		GetCompulsaryTokenOption(TFLOAT,TINT);
+		if (error) break;
+		if (token == TINT) c3 = (float)yyInt;
+		if (token == TFLOAT) c3 = yyFloat;
+
+		GetCompulsaryToken(Get("Kd"));
+		if (error) break;
+		GetCompulsaryTokenOption(TFLOAT,TINT);
+		if (error) break;
+		if (token == TINT) c1 = (float)yyInt;
+		if (token == TFLOAT) c1 = yyFloat;
+		GetCompulsaryTokenOption(TFLOAT,TINT);
+		if (error) break;
+		if (token == TINT) c2 = (float)yyInt;
+		if (token == TFLOAT) c2 = yyFloat;
+		GetCompulsaryTokenOption(TFLOAT,TINT);
+		if (error) break;
+		if (token == TINT) c3 = (float)yyInt;
+		if (token == TFLOAT) c3 = yyFloat;
+		diffuse.r = c1;
+		diffuse.g = c2;
+		diffuse.b = c3;
+
+		GetCompulsaryToken(Get("Ks"));
+		if (error) break;
+		GetCompulsaryTokenOption(TFLOAT,TINT);
+		if (error) break;
+		if (token == TINT) c1 = (float)yyInt;
+		if (token == TFLOAT) c1 = yyFloat;
+		GetCompulsaryTokenOption(TFLOAT,TINT);
+		if (error) break;
+		if (token == TINT) c2 = (float)yyInt;
+		if (token == TFLOAT) c2 = yyFloat;
+		GetCompulsaryTokenOption(TFLOAT,TINT);
+		if (error) break;
+		if (token == TINT) c3 = (float)yyInt;
+		if (token == TFLOAT) c3 = yyFloat;
+
 		std::string mapName;
-
-		do
+		token = GetNextToken();
+		if (token == Get("map_Kd"))
 		{
-			token = GetNextToken();
-
-			if (token == Get("Ns"))
+			bool extension = false;
+			do
 			{
-				GetCompulsaryTokenOption(TFLOAT,TINT);
-				if (error) break;
-				if (token == TINT) c1 = (float)yyInt;
-				if (token == TFLOAT) c1 = yyFloat;
-			}
-			else if (token == Get("d"))
-			{
-				GetCompulsaryTokenOption(TFLOAT,TINT);
-				if (error) break;
-			}
-			else if (token == Get("illum"))
-			{
-				GetCompulsaryTokenOption(TFLOAT,TINT);
-				if (error) break;
-			}
-			else if (token == Get("Ka"))
-			{
-				GetCompulsaryTokenOption(TFLOAT,TINT);
-				if (error) break;
-				if (token == TINT) c1 = (float)yyInt;
-				if (token == TFLOAT) c1 = yyFloat;
-				GetCompulsaryTokenOption(TFLOAT,TINT);
-				if (error) break;
-				if (token == TINT) c2 = (float)yyInt;
-				if (token == TFLOAT) c2 = yyFloat;
-				GetCompulsaryTokenOption(TFLOAT,TINT);
-				if (error) break;
-				if (token == TINT) c3 = (float)yyInt;
-				if (token == TFLOAT) c3 = yyFloat;
-			}
-			else if (token == Get("Kd"))
-			{
-				GetCompulsaryTokenOption(TFLOAT,TINT);
-				if (error) break;
-				if (token == TINT) c1 = (float)yyInt;
-				if (token == TFLOAT) c1 = yyFloat;
-				GetCompulsaryTokenOption(TFLOAT,TINT);
-				if (error) break;
-				if (token == TINT) c2 = (float)yyInt;
-				if (token == TFLOAT) c2 = yyFloat;
-				GetCompulsaryTokenOption(TFLOAT,TINT);
-				if (error) break;
-				if (token == TINT) c3 = (float)yyInt;
-				if (token == TFLOAT) c3 = yyFloat;
-				diffuse.r = c1;
-				diffuse.g = c2;
-				diffuse.b = c3;
-			}
-			else if (token == Get("Ks"))
-			{
-				GetCompulsaryTokenOption(TFLOAT,TINT);
-				if (error) break;
-				if (token == TINT) c1 = (float)yyInt;
-				if (token == TFLOAT) c1 = yyFloat;
-				GetCompulsaryTokenOption(TFLOAT,TINT);
-				if (error) break;
-				if (token == TINT) c2 = (float)yyInt;
-				if (token == TFLOAT) c2 = yyFloat;
-				GetCompulsaryTokenOption(TFLOAT,TINT);
-				if (error) break;
-				if (token == TINT) c3 = (float)yyInt;
-				if (token == TFLOAT) c3 = yyFloat;
-			}
-			else if (token == Get("map_Kd"))
-			{
-				bool extension = false;
-				do
+				token = GetNextToken();
+				if (token == Get("."))
 				{
-					token = GetNextToken();
-					if (token == Get("."))
-					{
-						extension = true;
-						mapName = mapName + ".";
-					}
-					else if (token == TIDENT)
-					{
-						if (!mapName.empty() && !extension)
-						{
-							mapName = mapName + " ";
-						}
-						mapName = mapName + yyString;
-					}
-					else
-					{
-						UngetToken();
-						break;
-					}
+					extension = true;
+					mapName = mapName + ".";
 				}
-				while (true);
+				else if (token == TIDENT)
+				{
+					if (!mapName.empty() && !extension)
+					{
+						mapName = mapName + " ";
+					}
+					mapName = mapName + yyString;
+				}
+				else
+				{
+					UngetToken();
+					break;
+				}
 			}
-			else
-			{
-				UngetToken();
-				break;
-			}
+			while (true);
 		}
-		while (true);
+		else
+		{
+			UngetToken();
+		}
 
 		// add material
 		ObjMaterial mat;
@@ -778,7 +687,7 @@ void ObjImport::ParseMaterialLib()
 		{
 			mat.mapName = filePrefix + mapName;
 		}
-//		materials.push_back(mat);
+		materials.push_back(mat);
 
 		token = GetNextToken();
 		if (token != Get("newmtl"))

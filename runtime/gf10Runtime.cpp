@@ -15,23 +15,15 @@
 #include "system/objectFactory.h"
 
 #include "system/model/camera.h"
-#include "system/model/level.h"
 #include "system/model/mesh.h"
+#include "system/model/level.h"
 #include "system/model/model.h"
-#include "system/keyboard.h"
-#include "system/gamePad.h"
-
-#include "system/network/networkClient.h"
-
-#include "menu/menuManager.h"
 
 #include "game/ship.h"
 #include "game/base.h"
 #include "game/modelMap.h"
 #include "game/commonModels.h"
 #include "game/indestructableRegion.h"
-#include "game/Turret.h"
-#include "game/Water.h"
 
 #include "system/signals/addObjectObserver.h"
 
@@ -41,7 +33,10 @@
 ////////////////////////////////////////////////////
 
 GF10Runtime::GF10Runtime()
-	: selectedItem(NULL)
+	: camera(NULL)
+	, selectedItem(NULL)
+	, escape(NULL)
+	, cont(NULL)
 {
 	// background clear colour
 	float col = 0.0f;
@@ -50,36 +45,35 @@ GF10Runtime::GF10Runtime()
 	// grid colours
 	lightColour = D3DXCOLOR(0.4f,0.4f,0.4f,0);
 	darkColour = D3DXCOLOR(0.2f,0.2f,0.2f,0);
-	white = D3DXCOLOR(1,1,1,1);
 
 	wireframe = false;
 	cullCCW = true;
 
-	screenType = Runtime::SC_HORIZONTAL;
-
-	// load ships
-	LoadShipDefinitions(System::GetDataDirectory() + "ships\\ships.xml");
-	if (shipDefinitions.size() == 0)
-	{
-		throw new Exception("could not load any ships");
-	}
-	// set these values into the menu system
-	menuManager->SetShipDefinitions(shipDefinitions);
+	splitScreenType = ModelMap::SC_HORIZONTAL;
 
 	// escape key
-	activity = ACT_INMENU;
+	escape = new Input::Event(Input::KEYBOARD, Input::KEY, 0, Input::SK_ESCAPE);
+	cont = new Input::Event(Input::KEYBOARD, Input::KEY, 0, Input::SK_ENTER);
+	activity = ACT_NONE;
 }
 
 GF10Runtime::~GF10Runtime()
 {
 	// release common models
 	CommonModels::Destroy();
+	safe_delete(escape);
+	safe_delete(cont);
 	safe_delete(camera);
 }
 
 void GF10Runtime::SetSelectedItem(WorldObject* _selectedItem)
 {
 	selectedItem = _selectedItem;
+}
+
+void GF10Runtime::SetSplitScreenType(int _splitScreenType)
+{
+	splitScreenType = _splitScreenType;
 }
 
 bool GF10Runtime::GetWireframe()
@@ -102,13 +96,24 @@ void GF10Runtime::SetCullCCW(bool _cullCCW)
 	cullCCW = _cullCCW;
 }
 
+void GF10Runtime::ClearCurrentLevel()
+{
+	if (currentLevel!=NULL)
+	{
+		base.clear();
+		ship.clear();
+		indestructableRegion.clear();
+		modelMap = NULL;
+	}
+}
+
 void GF10Runtime::Initialise()
 {
 	Device* dev=Interface::GetDevice();
 
 	if (camera==NULL)
 	{
-		camera = new Camera();
+		camera=new Camera();
 		camera->Activate();
 	}
 
@@ -118,9 +123,10 @@ void GF10Runtime::Initialise()
 
 void GF10Runtime::SetActivePlayer(int shipId)
 {
+	std::vector<Ship*> ships = GetShips();
 	PreCond(shipId < ships.size());
 	selectedItem = ships[shipId];
-	ships[shipId]->SetupKeyboard(0);
+	ships[shipId]->SetupKeyboard();
 }
 
 void GF10Runtime::EventInit()
@@ -142,124 +148,68 @@ void GF10Runtime::EventInit()
 				std::string str = "Object "+objects[i]->GetName()+" threw an exception\n";
 				str = str + "(" + e->Message() + ")\n";
 				str = str + "this object's script is now disabled";
-				BaseApp::Get()->ShowErrorMessage(str,"Init Script runtime error");
+				BaseApp::GetApp().ShowErrorMessage(str,"Init Script runtime error");
 			}
 		}
 	}
 }
 
-void GF10Runtime::EventLogic(double frameTime)
+void GF10Runtime::EventLogic(double time)
 {
-	// call down - always - handle networking if applicable
-	Runtime::EventLogic(frameTime);
-	// handle game-pad polling
-	GamePad::Get()->EventLogic(frameTime);
-	// for keyboard handling
-	Keyboard* keyboard = Keyboard::Get();
+	UpdateCamera();
 
-	switch (activity)
+	// check if user wants to exit
+	if (Input::CheckEvent(escape) && activity == ACT_NONE)
 	{
-	case ACT_INMENU:
+		activity = ACT_ASKING;
+	}
+	if (!Input::CheckEvent(escape) && activity == ACT_ASKING)
+	{
+		activity = ACT_REPLY;
+	}
+	if (Input::CheckEvent(escape) && activity == ACT_REPLY)
+	{
+		activity = ACT_QUIT;
+	}
+	if (!Input::CheckEvent(escape) && activity == ACT_QUIT)
+	{
+		activity = ACT_NONE;
+		BaseApp::GetApp().QuitGame();
+		ClearCurrentLevel();
+		return;
+	}
+	if (Input::CheckEvent(cont) && activity == ACT_REPLY)
+	{
+		activity = ACT_CONTINUE;
+	}
+	if (!Input::CheckEvent(cont) && activity == ACT_CONTINUE)
+	{
+		activity = ACT_NONE;
+		return;
+	}
+
+	if (activity == ACT_NONE)
+	{
+		if (currentLevel!=NULL)
 		{
-			// menu system
-			menuManager->EventLogic(frameTime);
-			break;
-		}
-	case ACT_ERROR:
-		{
-			// press enter to continue/leave error mode
-			if (keyboard->KeyPress() == Input::SK_ESCAPE)
+			std::vector<WorldObject*> objects=currentLevel->GetObjects();
+
+			// draw all bounding boxes of all objects for now (exepting the root)
+			for (int i=1; i<objects.size(); i++)
 			{
-				GP_QuitGame();
-				return;
-			}
-			break;
-		}
-	case ACT_ASKEXITGAME:
-		{
-			int key = keyboard->KeyPress();
-			switch (key)
-			{
-			case Input::SK_ESCAPE:
+				try
 				{
-					GP_QuitGame();
-					break;
+					objects[i]->EventLogic(time);
 				}
-			case Input::SK_ENTER:
+				catch (Exception* e)
 				{
-					activity = ACT_INGAME;
-					break;
+					objects[i]->SetScriptEnabled(false);
+					std::string str = "Object "+objects[i]->GetName()+" threw an exception\n";
+					str = str + "(" + e->Message() + ")\n";
+					str = str + "this object's script is now disabled";
+					BaseApp::GetApp().ShowErrorMessage(str,"Logic Script runtime error");
 				}
 			}
-			break;
-		}
-	case ACT_GAMEOVER:
-		{
-			if (keyboard->KeyPress() != Input::SK_ENTER)
-			{
-				GP_QuitGame();
-			}
-			break;
-		}
-	case ACT_INGAME:
-		{
-			UpdateCamera();
-
-			if (keyboard->KeyPress() == Input::SK_ESCAPE)
-			{
-				activity = ACT_ASKEXITGAME;
-			}
-
-			// game over?
-			int gameOverScore = 10;
-			if (GP_GetGameType() == Runtime::GT_FIRST_OUT_OF_FIVE)
-			{
-				gameOverScore = 5;
-			}
-
-			// check overall scores
-			std::vector<Ship*>::iterator pos = ships.begin();
-			while (pos != ships.end())
-			{
-				if ((*pos)->MyScore() >= gameOverScore)
-				{
-					// set winner
-					GP_Winner(*pos);
-					activity = ACT_GAMEOVER;
-					break;
-				}
-				pos++;
-			}
-
-			if (currentLevel!=NULL)
-			{
-				std::vector<WorldObject*> objects=currentLevel->GetObjects();
-
-				// draw all bounding boxes of all objects for now (exepting the root)
-				for (int i=1; i<objects.size(); i++)
-				{
-					try
-					{
-						objects[i]->EventLogic(frameTime);
-					}
-					catch (Exception* e)
-					{
-						objects[i]->SetScriptEnabled(false);
-						std::string str = "Object "+objects[i]->GetName()+" threw an exception\n";
-						str = str + "(" + e->Message() + ")\n";
-						str = str + "this object's script is now disabled";
-						BaseApp::Get()->ShowErrorMessage(str,"Logic Script runtime error");
-					}
-				}
-
-				// process the ships' logic seperately
-				for (int i=0; i < ships.size(); i++)
-				{
-					ships[i]->EventLogic(frameTime);
-				}
-
-			}
-			break;
 		}
 	}
 }
@@ -280,7 +230,6 @@ bool GF10Runtime::SetupSceneForRendering()
 	// set fixed funciton transforms
 	dev->SetIdentityTransform();
 
-	//camera->SetAngles(10,0);
 	camera->Activate();
 
 	dev->SetViewTransform(camera->GetViewMatrix());
@@ -337,6 +286,7 @@ void GF10Runtime::Draw(double time, float displayOffX, float displayOffY, int sh
 			ModelMap* mm = GetModelMap();
 			if (mm != NULL)
 			{
+				std::vector<Ship*> ships = GetShips();
 				if (shipId < ships.size())
 				{
 					D3DXVECTOR3 zeroPos = ships[shipId]->GetPosition();
@@ -350,26 +300,10 @@ void GF10Runtime::Draw(double time, float displayOffX, float displayOffY, int sh
 						bases[i]->Draw(time, zeroPos);
 					}
 
-					// draw the turrets
-					std::vector<Turret*> turrets = GetTurrets();
-					for (int i = 0; i < turrets.size(); i++)
-					{
-						dev->SetIdentityTransform();
-						turrets[i]->Draw(time, zeroPos);
-					}
-
 					for (int i=0; i < ships.size(); i++)
 					{
 						dev->SetIdentityTransform();
 						ships[i]->Draw(time, zeroPos);
-					}
-
-					// draw the waters
-					std::vector<Water*> waters = GetWater();
-					for (int i = 0; i < waters.size(); i++)
-					{
-						dev->SetIdentityTransform();
-						waters[i]->Draw(time, zeroPos);
 					}
 
 					// display zero pos objects status
@@ -390,189 +324,11 @@ void GF10Runtime::Draw(double time, float displayOffX, float displayOffY, int sh
 	}
 }
 
-void GF10Runtime::DrawMixed(double time, float offsetX, float offsetY1, float offsetY2, float posx, float posy, 
-						 RECT* source, RECT* dest, int splitScreenType)
-{
-	if (SetupSceneForRendering())
-	{
-		Device* dev = Interface::GetDevice();
-		dev->SetIdentityTransform();
-
-		dev->SetTextureStageState( 0, D3DTSS_COLOROP,   D3DTOP_SELECTARG1 );
-		dev->SetTextureStageState( 0, D3DTSS_COLORARG1, D3DTA_TEXTURE );
-		dev->SetTextureStageState( 0, D3DTSS_COLORARG2, D3DTA_DIFFUSE );
-		dev->SetTextureStageState( 0, D3DTSS_ALPHAOP,   D3DTOP_SELECTARG1 );
-		dev->SetTextureStageState( 0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE );
-		dev->SetSamplerState( 0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR );
-		dev->SetSamplerState( 0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR );
-		dev->SetSamplerState( 0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR );
-		dev->SetSamplerState( 0, D3DSAMP_ADDRESSU,  D3DTADDRESS_CLAMP );
-		dev->SetSamplerState( 0, D3DSAMP_ADDRESSV,  D3DTADDRESS_CLAMP );
-
-		dev->SetRenderState(D3DRS_LIGHTING,FALSE);
-		dev->SetRenderState(D3DRS_ALPHABLENDENABLE,FALSE);
-		dev->SetRenderState(D3DRS_ZWRITEENABLE,TRUE);
-
-		if (currentLevel!=NULL)
-		{
-			// draw game map
-			ModelMap* mm = GetModelMap();
-			if (mm != NULL)
-			{
-				D3DXVECTOR3 zeroPos;
-				zeroPos.x = posx;
-				zeroPos.y = posy;
-				zeroPos.z = ships[0]->GetPosition().z;
-
-				mm->Draw(zeroPos, splitScreenType);
-
-				// do bases
-				std::vector<Base*> bases = GetBases();
-				for (int i=0; i < bases.size(); i++)
-				{
-					dev->SetIdentityTransform();
-					bases[i]->Draw(time, zeroPos);
-				}
-
-				// draw the turrets
-				std::vector<Turret*> turrets = GetTurrets();
-				for (int i = 0; i < turrets.size(); i++)
-				{
-					dev->SetIdentityTransform();
-					turrets[i]->Draw(time, zeroPos);
-				}
-
-				for (int i=0; i < ships.size(); i++)
-				{
-					dev->SetIdentityTransform();
-					ships[i]->Draw(time, zeroPos);
-				}
-
-				// draw the waters
-				std::vector<Water*> waters = GetWater();
-				for (int i = 0; i < waters.size(); i++)
-				{
-					dev->SetIdentityTransform();
-					waters[i]->Draw(time, zeroPos);
-				}
-
-				// display zero pos objects status
-				ships[0]->DisplayStatus(offsetX, offsetY1);
-				ships[1]->DisplayStatus(offsetX, offsetY2);
-			}
-		}
-		
-		// draw black border
-		D3DXCOLOR black = D3DXCOLOR(0,0,0,1);
-		dev->FillRect(D3DXVECTOR2((float)source->left,(float)source->top+2), D3DXVECTOR2((float)source->right,(float)source->top), black);
-		dev->FillRect(D3DXVECTOR2((float)source->left,(float)source->bottom), D3DXVECTOR2((float)source->right,(float)source->bottom-2), black);
-		dev->FillRect(D3DXVECTOR2((float)source->left,(float)source->bottom), D3DXVECTOR2((float)source->left+2,(float)source->top), black);
-		dev->FillRect(D3DXVECTOR2((float)source->right-2,(float)source->bottom), D3DXVECTOR2((float)source->right,(float)source->top), black);
-
-		dev->EndScene();
-		dev->Present(source, dest);
-	}
-}
-
-void GF10Runtime::Draw(double frameTime)
+void GF10Runtime::Draw(double time)
 {
 	switch (activity)
 	{
-	case ACT_INMENU:
-		{
-			menuManager->Draw(frameTime);
-			break;
-		}
-	case ACT_ERROR:
-		{
-			SetupSceneForRendering();
-			Device* dev = Interface::GetDevice();
-			Font* font = dev->GetSmallFont();
-			float w = (float)dev->GetWidth();
-			float h = (float)dev->GetHeight();
-			
-			std::string str = "AN ERROR OCCURED";
-			float width = font->GetWidth(str);
-			font->Write(w * 0.5f - width * 0.5f, h * 0.45f - 10, str, D3DXCOLOR(1,0.4f,0.4f,1));
-
-			width = font->GetWidth(errorString);
-			font->Write(w * 0.5f - width * 0.5f, h * 0.55f - 10, errorString, white);
-
-			str = "press [ESC] to continue";
-			width = font->GetWidth(str);
-			font->Write(w * 0.5f - width * 0.5f, h * 0.75f - 10, str, white);
-
-			PresentFrame();
-			break;
-		}
-	case ACT_ASKEXITGAME:
-		{
-			SetupSceneForRendering();
-			Device* dev = Interface::GetDevice();
-			Font* font = dev->GetSmallFont();
-			float w = (float)dev->GetWidth();
-			float h = (float)dev->GetHeight();
-			
-			std::string str = "press [ENTER] to continue";
-			float width = font->GetWidth(str);
-			font->Write(w * 0.5f - width * 0.5f, h * 0.45f - 10, str, white);
-
-			str = "or press [ESC] to return to the main menu";
-			width = font->GetWidth(str);
-			font->Write(w * 0.5f - width * 0.5f, h * 0.55f - 10, str, white);
-
-			PresentFrame();
-			break;
-		}
-	case ACT_GAMEOVER:
-		{
-			SetupSceneForRendering();
-			Device* dev = Interface::GetDevice();
-			Font* font = dev->GetSmallFont();
-			Font* largeFont = dev->GetLargeFont();
-			float w = (float)dev->GetWidth();
-			float h = (float)dev->GetHeight();
-			
-			// display winner and loser if the game is over
-			Ship* winnerShip = (Ship*)GP_Winner();
-
-			std::string name;
-			for (int i=0; i < networkPlayers.size(); i++)
-			{
-				if (networkPlayers[i].playerId == winnerShip->PlayerId())
-				{
-					name = networkPlayers[i].name;
-					break;
-				}
-			}
-			if (name.empty())
-			{
-				if (ships[0] == winnerShip)
-				{
-					name = "Player 1";
-				}
-				else
-				{
-					name = "Player 2";
-				}
-			}
-
-			std::string str = "Game Over";
-			float width = font->GetWidth(str);
-			font->Write(w * 0.5f - width * 0.5f, h * 0.2f, str, white);
-
-			std::string displayStr = "W I N N E R  : " + name;
-			width = largeFont->GetWidth(displayStr);
-			largeFont->Write((w * 0.5f) - (width * 0.5f), h * 0.5f, displayStr, white);
-
-			str = "press [ENTER] to continue";
-			width = font->GetWidth(str);
-			font->Write(w * 0.5f - width * 0.5f, h * 0.8f, str, white);
-
-			PresentFrame();
-			break;
-		}
-	case ACT_INGAME:
+		case ACT_NONE:
 		{
 			if (ObjectFactory::Isa(selectedItem, WorldObject::TYPE_SHIP))
 			{
@@ -581,6 +337,7 @@ void GF10Runtime::Draw(double frameTime)
 				// find id of ship
 				int shipId1 = -1;
 				int shipId2 = -1;
+				std::vector<Ship*> ships = GetShips();
 				for (int i=0; i < ships.size(); i++)
 				{
 					if (ships[i]->GetOid() == selectedItem->GetOid())
@@ -602,39 +359,14 @@ void GF10Runtime::Draw(double frameTime)
 						shipId2 = 1;
 				}
 
-				Device* dev = Interface::GetDevice();
+				Device* dev=Interface::GetDevice();
 				RECT dest, source;
 				int w = dev->GetWidth();
 				int h = dev->GetHeight();
 
-				int useSplitScreen = screenType;
-				if (useSplitScreen != Runtime::SC_SINGLE)
+				switch (splitScreenType)
 				{
-					if (ships.size() == 2)
-					{
-						D3DXVECTOR3 pos1 = ships[0]->GetPosition();
-						D3DXVECTOR3 pos2 = ships[1]->GetPosition();
-						float dx = (pos1.x - pos2.x);
-						dx = dx * dx;
-						float dy = (pos1.y - pos2.y);
-						dy = dy * dy;
-
-						// adjust distance according to smaller screen aspect
-						float w = (float)BaseApp::Get()->Width();
-						w = (w * w) * 0.075f;
-						float h = (float)BaseApp::Get()->Height();
-						h = (h * h) * 0.075f;
-
-						if (dx < w && dy < h)
-						{
-							useSplitScreen = Runtime::SC_MIXED;
-						}
-					}
-				}
-
-				switch (useSplitScreen)
-				{
-					case Runtime::SC_VERTICAL:
+					case ModelMap::SC_VERTICAL:
 					{
 						// setting for 800 x 600 screen only!
 						camera->SetPosition(D3DXVECTOR3(0,0,-250));
@@ -646,15 +378,15 @@ void GF10Runtime::Draw(double frameTime)
 						// lhs of split screen
 						SetRect(&source, w/4, 0, w/4 + w/2, h);
 						SetRect(&dest, 0, 0, w/2, h);
-						Draw(frameTime, offsetX, offsetY, shipId1, &source, &dest, screenType);
+						Draw(time, offsetX, offsetY, shipId1, &source, &dest, splitScreenType);
 
 						// rhs of split screen
 						SetRect(&source, w/4, 0, w/4 + w/2, h);
 						SetRect(&dest, w/2, 0, w, h);
-						Draw(frameTime, offsetX, offsetY, shipId2, &source, &dest, screenType);
+						Draw(time, offsetX, offsetY, shipId2, &source, &dest, splitScreenType);
 						break;
 					}
-					case Runtime::SC_HORIZONTAL:
+					case ModelMap::SC_HORIZONTAL:
 					{
 						// setting for 800 x 600 screen only!
 						camera->SetPosition(D3DXVECTOR3(0,0,-250));
@@ -665,15 +397,15 @@ void GF10Runtime::Draw(double frameTime)
 						// lhs of split screen
 						SetRect(&source, 0, h/4, w, h/4 + h/2);
 						SetRect(&dest, 0, 0, w, h/2);
-						Draw(frameTime, offsetX, offsetY, shipId1, &source, &dest, screenType);
+						Draw(time, offsetX, offsetY, shipId1, &source, &dest, splitScreenType);
 
 						// rhs of split screen
 						SetRect(&source, 0, h/4, w, h/4 + h/2);
 						SetRect(&dest, 0, h/2, w, h);
-						Draw(frameTime, offsetX, offsetY, shipId2, &source, &dest, screenType);
+						Draw(time, offsetX, offsetY, shipId2, &source, &dest, splitScreenType);
 						break;
 					}
-					case Runtime::SC_SINGLE:
+					case ModelMap::SC_SINGLE:
 					{
 						// setting for 800 x 600 screen only!
 						camera->SetPosition(D3DXVECTOR3(0,0,-250));
@@ -684,30 +416,53 @@ void GF10Runtime::Draw(double frameTime)
 						// full screen
 						SetRect(&source, 0, 0, w, h);
 						SetRect(&dest, 0, 0, w, h);
-						Draw(frameTime, offsetX, offsetY, shipId1, &source, &dest, screenType);
+						Draw(time, offsetX, offsetY, shipId1, &source, &dest, splitScreenType);
 						break;
 					}
-					case Runtime::SC_MIXED:
+					case ModelMap::SC_FOUR:
 					{
 						// setting for 800 x 600 screen only!
 						camera->SetPosition(D3DXVECTOR3(0,0,-250));
 
-						float offsetX = 20;
-						float offsetY1 = (float)dev->GetHeight() - 60;
-						float offsetY2 = 40;
+						float offsetX = (float)w / 4 + 20;
+						float offsetY = (float)dev->GetHeight() * 0.6f + 20;
 
-						// full screen
-						SetRect(&source, 0, 0, w, h);
-						SetRect(&dest, 0, 0, w, h);
-						D3DXVECTOR3 pos1 = ships[0]->GetPosition();
-						D3DXVECTOR3 pos2 = ships[1]->GetPosition();
-						float posx = (pos1.x + pos2.x) * 0.5f;
-						float posy = (pos1.y + pos2.y) * 0.5f;
-						DrawMixed(frameTime, offsetX, offsetY1, offsetY2, posx, posy, &source, &dest, Runtime::SC_SINGLE);
+						// lh top of split screen
+						SetRect(&source, w/4, h/4, w/4 + w/2, h/4 + h/2);
+						SetRect(&dest, 0, 0, w/2, h/2);
+						Draw(time, offsetX, offsetY, shipId1, &source, &dest, splitScreenType);
+
+						// rh top of split screen
+						SetRect(&source, w/4, h/4, w/4 + w/2, h/4 + h/2);
+						SetRect(&dest, w/2, 0, w, h/2);
+						Draw(time, offsetX, offsetY, shipId2, &source, &dest, splitScreenType);
+
+						// lh bottom of split screen
+						SetRect(&source, w/4, h/4, w/4 + w/2, h/4 + h/2);
+						SetRect(&dest, 0, h/2, w/2, h);
+						Draw(time, offsetX, offsetY, shipId1, &source, &dest, splitScreenType);
+
+						// rh bottom of split screen
+						SetRect(&source, w/4, h/4, w/4 + w/2, h/4 + h/2);
+						SetRect(&dest, w/2, h/2, w, h);
+						Draw(time, offsetX, offsetY, shipId2, &source, &dest, splitScreenType);
 						break;
 					}
 				}
 			}
+			break;
+		}
+		default:
+		{
+			SetupSceneForRendering();
+			Device* dev = Interface::GetDevice();
+			Font* font = dev->GetFont();
+			float w = (float)dev->GetWidth();
+			float h = (float)dev->GetHeight();
+			std::string str = "PRESS [ESC] TO QUIT OR [ENTER] TO CONTINUE PLAYING";
+			float width = font->GetWidth(str);
+			font->Write(w*0.5f-width*0.5f,h*0.5f-10,str,D3DXCOLOR(1,1,1,1));
+			PresentFrame();
 			break;
 		}
 	}
@@ -821,5 +576,57 @@ void GF10Runtime::PresentFrame()
 	Device* dev = Interface::GetDevice();
 	dev->EndScene();
 	dev->Present();
+}
+
+Camera* GF10Runtime::GetCamera()
+{
+	return camera;
+}
+
+void GF10Runtime::SetCamera(const Camera& _camera)
+{
+	PreCond(camera!=NULL);
+	*camera = _camera;
+}
+
+void GF10Runtime::RebuildGameObjects()
+{
+	if (currentLevel!=NULL)
+	{
+		base.clear();
+		ship.clear();
+		indestructableRegion.clear();
+		modelMap = NULL;
+
+		std::vector<WorldObject*> objects = currentLevel->GetObjects();
+
+		// get all object and arrange them into their appropriate game arrays
+		for (int i=1; i<objects.size(); i++)
+		{
+			WorldObject* worldObject = objects[i];
+			if (ObjectFactory::Isa(worldObject, WorldObject::TYPE_MODELMAP))
+			{
+				modelMap = dynamic_cast<ModelMap*>(worldObject);
+			}
+			else if (ObjectFactory::Isa(worldObject, WorldObject::TYPE_BASE))
+			{
+				base.push_back(dynamic_cast<Base*>(worldObject));
+			}
+			else if (ObjectFactory::Isa(worldObject, WorldObject::TYPE_SHIP))
+			{
+				ship.push_back(dynamic_cast<Ship*>(worldObject));
+			}
+			else if (ObjectFactory::Isa(worldObject, WorldObject::TYPE_INDESTRUCTABLEREGION))
+			{
+				indestructableRegion.push_back(dynamic_cast<IndestructableRegion*>(worldObject));
+			}
+		}
+	}
+}
+
+void GF10Runtime::SetCurrentLevel(Level* currentLevel)
+{
+	Runtime::SetCurrentLevel(currentLevel);
+	RebuildGameObjects();
 }
 

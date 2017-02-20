@@ -1,0 +1,4 @@
+<settings>
+  <screen width="1920" height="1080" fullscreen="true" />
+  <keys left="SK_LEFT" right="SK_RIGHT" up="SK_UP" down="SK_DOWN" fire=" " />
+</settings>

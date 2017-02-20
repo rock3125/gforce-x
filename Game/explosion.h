@@ -35,11 +35,9 @@ public:
 
 private:
 	int			numAnimations;
-	int			animationIndex;
+	int			animationCounter;
+	int			counter;
 	bool		inUse;
-	double		explosionTimer;
-	double		EXPLOSION_DURATION;
-	double		ANIMATION_DURATION;
 
 	Texture**	explosion;
 

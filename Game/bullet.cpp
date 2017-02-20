@@ -68,36 +68,26 @@ void Bullet::SetInUse(bool _inUse)
 	inUse = _inUse;
 }
 
-void Bullet::Fire(const D3DXVECTOR3& pos, float baseOffset, float angle)
+void Bullet::Fire(const D3DXVECTOR3& pos, float baseOffset, float _angle)
 {
-	SetPosition(System::OffsetVector(pos, angle, baseOffset * 1.25f));
+	SetPosition(System::OffsetVector(pos, _angle, baseOffset * 1.25f));
 	inUse = true;
 	ttl = initialTTL;
-	this->angle = angle;
+	angle = _angle;
 }
 
 void Bullet::Draw(double time, Model* model, const D3DXVECTOR3& _pos)
 {
-	if (model != NULL && inUse)
+	float weight = 1;
+
+	Runtime* rt = BaseApp::GetApp().GetCurrentRuntime();
+	ModelMap* mm = rt->GetModelMap();
+	if (mm != NULL && model != NULL && inUse)
 	{
 		model->SetPosition(GetPosition() - _pos);
 		model->SetRotationQuat(GetRotationQuat());
 		model->SetScale(GetScale());
 		model->Draw(0);
-	}
-}
-
-void Bullet::EventLogic(double time)
-{
-	Runtime* rt = BaseApp::Get()->GetCurrentRuntime();
-	ModelMap* mm = rt->GetModelMap();
-
-	if (inUse && mm != NULL)
-	{
-		float weight = time * 50.0f;
-
-		ttl = max(0, ttl - time);
-		inUse = ttl > 0;
 
 		float delta = (float)(initialTTL - ttl);
 		float gravity = mm->GetGravity();
@@ -107,8 +97,8 @@ void Bullet::EventLogic(double time)
 		D3DXVECTOR3 pos = GetPosition();
 		D3DXVECTOR3 pos1 = pos;
 		D3DXVECTOR3 pos2;
-		pos.x += (xdirn * weight);
-		pos.y += (ydirn * weight);
+		pos.x += xdirn * weight;
+		pos.y += ydirn * weight;
 		SetPosition(pos);
 
 		// see if we collide with the map or not
@@ -124,6 +114,17 @@ void Bullet::EventLogic(double time)
 			p = p + 2.0f;
 		}
 		inUse = !found;
+	}
+}
+
+void Bullet::EventLogic(double time)
+{
+	float weight = 0.1f;
+
+	if (inUse)
+	{
+		ttl = max(0, ttl - weight);
+		inUse = ttl > 0;
 	}
 }
 

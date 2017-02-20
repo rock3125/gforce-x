@@ -15,6 +15,8 @@
 #include "d3d9/texture.h"
 #include "system/xml/XmlParser.h"
 
+float MenuLevelManager::BLINK_INTERVAL = 0.5f;
+
 /////////////////////////////////////////////////////////////
 
 MenuLevelManager::MenuLevelManager()
@@ -23,7 +25,6 @@ MenuLevelManager::MenuLevelManager()
 	blinking = false;
 	blinkTime = 0;
 	lastAction = LA_NONE;
-	BLINK_INTERVAL = 0.25;
 
 	levelTracker.numPlayers = 0;
 
@@ -114,7 +115,7 @@ void MenuLevelManager::Draw(int numPlayers, bool selected, float& xpos, float& y
 
 	// draw levels
 	Device* dev = Interface::GetDevice();
-	Font* font = dev->GetSmallFont();
+	Font* font = dev->GetFont();
 	D3DXVECTOR2 leftTop;
 	D3DXVECTOR2 rightBottom;
 

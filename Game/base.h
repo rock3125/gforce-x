@@ -35,18 +35,12 @@ public:
 	void GetTransformedAABB(D3DXVECTOR3& aabbmin, D3DXVECTOR3& aabbmax);
 
 	// save and load base
-	virtual void Read(XmlNode* node);
-	virtual XmlNode* Write();
+	virtual void Read(BaseStreamer&);
+	virtual void Write(BaseStreamer&);
 
 	// update internal bounding volume
 	virtual void UpdateBoundingBox();
 	virtual BoundingBox* GetBoundingBox();
-
-	// return the signature of this object
-	virtual std::string Signature()
-	{
-		return baseSignature;
-	}
 
 private:
 	// model to be drawn

@@ -1,6 +1,15 @@
+//////////////////////////////////////////////////////////////////////
+/// GRAVITY FORCE X
+///
+/// (c)Copyright Peter de Vocht, 2006
+///
+/// I'm releasing this code under GPL v2.1 (see included file lgpl.txt)
+///
+//////////////////////////////////////////////////////////////////////
+
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by GravityForceX.rc
+// Used by GF10Runtime.rc
 //
 #define IDC_MYICON                      2
 #define IDD_GF10RUNTIME_DIALOG          102
@@ -11,6 +20,7 @@
 #define IDI_SMALL                       108
 #define IDC_GF10RUNTIME                 109
 #define IDR_MAINFRAME                   128
+#define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 

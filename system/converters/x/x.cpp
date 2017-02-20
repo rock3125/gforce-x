@@ -57,11 +57,6 @@ const X& X::operator=(const X& x)
 	return *this;
 }
 
-WorldObject* X::LoadBinary(std::string filename)
-{
-	throw new Exception("load binary not implemented");
-}
-
 void X::ParseFile()
 {
 	GetCompulsaryToken("xof 0303txt 0032");

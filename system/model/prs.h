@@ -79,14 +79,8 @@ public:
 	virtual int GetParentOid() const;
 
 	// save and load PRS
-	virtual XmlNode* Write();
-	virtual void Read(XmlNode*);
-
-	// return the signature of this object
-	virtual std::string Signature()
-	{
-		return prsSignature;
-	}
+	virtual void Write(BaseStreamer&);
+	virtual void Read(BaseStreamer&);
 
 protected:
 	friend class Skin;

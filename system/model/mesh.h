@@ -59,14 +59,8 @@ public:
 	// optimise the mesh internally - throw away redundant verts
 	void OptimiseMesh();
 
-	XmlNode* Write();
-	void Read(XmlNode* node);
-
-	// return the signature of this object
-	static std::string Signature()
-	{
-		return meshSignature;
-	}
+	void Write(BaseStreamer& f);
+	void Read(BaseStreamer& f);
 
 protected:
 	friend class Device;

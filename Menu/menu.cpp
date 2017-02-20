@@ -16,6 +16,7 @@
 
 Menu::Menu()
 	: backgroundTexture(NULL)
+	, nameTexture(NULL)
 {
 	id = 0;
 }
@@ -24,10 +25,12 @@ Menu::~Menu()
 {
 	safe_delete_stl_array(item);
 	backgroundTexture = NULL;
+	nameTexture = NULL;
 }
 
 Menu::Menu(const Menu& m)
 	: backgroundTexture(NULL)
+	, nameTexture(NULL)
 {
 	operator=(m);
 }
@@ -35,6 +38,7 @@ Menu::Menu(const Menu& m)
 const Menu& Menu::operator=(const Menu& m)
 {
 	name = m.name;
+	nameTexture = m.nameTexture;
 	background = m.background;
 	backgroundTexture = m.backgroundTexture;
 	id = m.id;
@@ -77,6 +81,19 @@ void Menu::SetId(int _id)
 void Menu::SetName(const std::string& _name)
 {
 	name = _name;
+	if (!name.empty())
+	{
+		nameTexture = TextureCache::GetTexture("menu\\" + name);
+	}
+	else
+	{
+		nameTexture = NULL;
+	}
+}
+
+Texture* Menu::GetNameTexture()
+{
+	return nameTexture;
 }
 
 const std::string& Menu::GetBackground()

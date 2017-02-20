@@ -90,38 +90,36 @@ Bone* Bone::GetBoneByOid(Bone* rootBone, int oid)
 	return NULL;
 }
 
-void Bone::Read(XmlNode* node)
+void Bone::Read(BaseStreamer& _f)
 {
-	XmlNode::CheckVersion(node, boneSignature, boneVersion);
+	BaseStreamer& f = _f.GetChild(boneSignature,boneVersion);
 
-	WorldObject::Read(node->GetChild(WorldObject::Signature()));
-/*
+	WorldObject::Read(f);
+
 	int animationSize;
-	node->Read("animationSize", animationSize);
+	f.Read("animationSize", animationSize);
 	safe_delete_stl_array(animation);
 	for (int i=0; i < animationSize; i++)
 	{
 		BoneAnimation* ba = new BoneAnimation();
-		ba->Read(i, f);
+		ba->Read(i,f);
 		animation.push_back(ba);
 	}
 
 	// write children
 	std::vector<PRS*> children;
 	int numChildren;
-	node->Read("numChildren", numChildren);
+	f.Read("numChildren", numChildren);
 	for (int i=0; i < numChildren; i++)
 	{
 		Bone* bone = new Bone();
 		bone->Read(f);
 		AttachChild(bone);
 	}
-*/
 }
 
-XmlNode* Bone::Write()
+void Bone::Write(BaseStreamer& _f)
 {
-/*
 	BaseStreamer& f = _f.NewChild(boneSignature,boneVersion);
 
 	WorldObject::Write(f);
@@ -142,7 +140,5 @@ XmlNode* Bone::Write()
 		Bone* bone = dynamic_cast<Bone*>(children[i]);
 		bone->Write(f);
 	}
-*/
-	return NULL;
 }
 

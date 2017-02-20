@@ -16,9 +16,5 @@ public:
 protected:
 	// parse loaded file
 	virtual WorldObject* ParseLoadedFile();
-	// load binary file
-	virtual WorldObject* LoadBinary(std::string filename);
-
-	bool isBinary;
 };
 

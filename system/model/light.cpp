@@ -227,55 +227,53 @@ void Light::SetTheta(float _theta)
 	theta = _theta;
 }
 
-XmlNode* Light::Write()
+void Light::Write(BaseStreamer& _f)
 {
-	XmlNode* node = XmlNode::NewChild(lightSignature, lightVersion);
+	BaseStreamer& f = _f.NewChild(lightSignature,lightVersion);
 
-	node->Add(WorldObject::Write());
+	WorldObject::Write(f);
 
-	int t = type;
-	node->Write("type",t);
+	int t=type;
+	f.Write("type",t);
 
-	node->Write("diffuse", diffuse);
-	node->Write("specular", specular);
-	node->Write("ambient", ambient);
-	node->Write("direction", direction);
+	f.Write("diffuse", diffuse);
+	f.Write("specular", specular);
+	f.Write("ambient", ambient);
+	f.Write("direction", direction);
 
-	node->Write("range", range);
-	node->Write("falloff", falloff);
-	node->Write("attenuation0", attenuation0);
-	node->Write("attenuation1", attenuation1);
-	node->Write("attenuation2", attenuation2);
+	f.Write("range", range);
+	f.Write("falloff", falloff);
+	f.Write("attenuation0", attenuation0);
+	f.Write("attenuation1", attenuation1);
+	f.Write("attenuation2", attenuation2);
 
-	node->Write("theta", theta);
-	node->Write("phi", phi);
-
-	return node;
+	f.Write("theta", theta);
+	f.Write("phi", phi);
 }
 
-void Light::Read(XmlNode* node)
+void Light::Read(BaseStreamer& _f)
 {
-	XmlNode::CheckVersion(node, lightSignature, lightVersion);
+	BaseStreamer& f = _f.GetChild(lightSignature,lightVersion);
 
-	WorldObject::Read(node->GetChild(WorldObject::Signature()));
+	WorldObject::Read(f);
 
 	int t;
-	node->Read("type",t);
-	type=(D3DLIGHTTYPE)t;
+	f.Read("type",t);
+	type=D3DLIGHTTYPE(t);
 
-	node->Read("diffuse", diffuse);
-	node->Read("specular", specular);
-	node->Read("ambient", ambient);
-	node->Read("direction", direction);
+	f.Read("diffuse", diffuse);
+	f.Read("specular", specular);
+	f.Read("ambient", ambient);
+	f.Read("direction", direction);
 
-	node->Read("range", range);
-	node->Read("falloff", falloff);
-	node->Read("attenuation0", attenuation0);
-	node->Read("attenuation1", attenuation1);
-	node->Read("attenuation2", attenuation2);
+	f.Read("range", range);
+	f.Read("falloff", falloff);
+	f.Read("attenuation0", attenuation0);
+	f.Read("attenuation1", attenuation1);
+	f.Read("attenuation2", attenuation2);
 
-	node->Read("theta", theta);
-	node->Read("phi", phi);
+	f.Read("theta", theta);
+	f.Read("phi", phi);
 
 	Update();
 }

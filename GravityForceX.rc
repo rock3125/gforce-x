@@ -37,7 +37,7 @@ IDI_GF10RUNTIME         ICON                    "GravityForceX.ico"
 // Accelerator
 //
 
-IDC_GF10RUNTIME ACCELERATORS 
+IDC_GF10RUNTIME ACCELERATORS
 BEGIN
     "?",            IDM_ABOUT,              ASCII,  ALT
     "/",            IDM_ABOUT,              ASCII,  ALT
@@ -50,12 +50,12 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
     "#include ""windows.h""\r\n"
@@ -63,7 +63,7 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -78,8 +78,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,5,8,0
- PRODUCTVERSION 0,5,8,0
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -94,13 +94,13 @@ BEGIN
     BEGIN
         BLOCK "140904b0"
         BEGIN
-            VALUE "FileDescription", "Gravity Force X"
-            VALUE "FileVersion", "0, 5, 8, 0"
+            VALUE "FileDescription", "Gravity Force 10"
+            VALUE "FileVersion", "1, 0, 0, 1"
             VALUE "InternalName", "Gravity Force X"
             VALUE "LegalCopyright", "Copyright (c) Peter de Vocht, 2006"
             VALUE "OriginalFilename", "gf10.exe"
             VALUE "ProductName", " Gravity Force X"
-            VALUE "ProductVersion", "0, 5, 8, 0"
+            VALUE "ProductVersion", "1, 0, 0, 1"
         END
     END
     BLOCK "VarFileInfo"
@@ -115,7 +115,7 @@ END
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Gravity Force X"
     IDC_GF10RUNTIME         "GracvityForceX"

@@ -76,8 +76,6 @@ public:
 
 	// parse the complete bvh
 	WorldObject* ParseLoadedFile();
-	// not supported - but needs to be implemented
-	WorldObject* LoadBinary(std::string filename);
 
 private:
 	void ParseBVH();

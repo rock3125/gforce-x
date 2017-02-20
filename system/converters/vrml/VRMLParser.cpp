@@ -75,11 +75,6 @@ VRMLParser::VRMLParser(const VRMLParser& tp)
 	operator=(tp);
 }
 
-WorldObject* VRMLParser::LoadBinary(std::string filename)
-{
-	throw new Exception("load binary not implemented");
-}
-
 // vrml ->	'#' comment til eol		|
 //			defList
 WorldObject* VRMLParser::ParseLoadedFile()

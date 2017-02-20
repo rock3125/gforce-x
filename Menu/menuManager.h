@@ -18,7 +18,7 @@ class Camera;
 class MenuLevelManager;
 class MenuShipManager;
 class MenuItem;
-class ShipData;
+class MenuShip;
 
 //////////////////////////////////////////////////////////////
 
@@ -33,9 +33,6 @@ public:
 	// load menus from file
 	void Load(const std::string& filename);
 
-	// set ship definitions after they have loaded
-	void SetShipDefinitions(std::vector<ShipData*> shipDefinitions);
-
 	// draw menu manager
 	void Draw(double time);
 
@@ -46,8 +43,12 @@ public:
 	Menu* GetMenuById(int id);
 
 	// accessors
-	std::map<int,Menu*> GetMenus();
-	void SetMenus(std::map<int,Menu*> menu);
+	std::vector<Menu*> GetMenus();
+	void SetMenus(std::vector<Menu*> menu);
+
+	// activate / deactivate the menu system
+	bool GetActive();
+	void SetActive(bool active);
 
 	// callback for progress uptdating
 	void UpdateProgress(float progress);
@@ -62,18 +63,20 @@ private:
 	// draw the level icons
 	void DrawLevels(MenuItem* levelInfo, float xpos, float ypos);
 
+	// load and setup a level after its all done
+	bool LoadLevel(int splitScreenType, int gameType);
+
 	// parse screen and game type
 	void GetScreenAndGameType(std::string action, int& screenType, int& gameType);
 
-	// execute a menu action
-	void ExecuteAction(std::string action);
-
 private:
 	// collection of all menus
-	std::map<int,Menu*>	menu;
+	std::vector<Menu*>	menu;
 
 	// camera
 	Camera*	camera;
+
+	Texture* gameTitle;
 
 	// level selection systme
 	MenuLevelManager* menuLevelManager;
@@ -111,17 +114,8 @@ private:
 	int lastAction;
 
 	// flashing menu item
+	float blinkTime;
 	bool blinking;
-	double blinkTime;
-	double BLINK_INTERVAL;
-
-	double brightNess;
-	double brightNessDirn;
-	double brightNessTime;
-	double BRIGHTNESS_INTERVAL;
-	double BRIGHTNESS_MAX;
-	double BRIGHTNESS_MIN;
-
 
 	// inputs for up to four players
 	int inputs[4];
@@ -129,7 +123,11 @@ private:
 	// possible input types by id
 	Texture* inputNames[Input::CTRL_GAMEPAD4+1];
 
+	// blink speed
+	static float BLINK_INTERVAL;
+
 	// is menu system active?
+	bool	active;
 	int		activeMenu;
 	int		activeItem;
 
@@ -143,6 +141,6 @@ private:
 	D3DXCOLOR selColourOff;
 
 	// selected ship(s)
-	std::vector<ShipData*> ships;
+	std::vector<MenuShip*> ships;
 };
 
